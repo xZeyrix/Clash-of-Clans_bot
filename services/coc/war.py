@@ -1,0 +1,71 @@
+from config import CLAN_TAG
+from services.coc import coc_api
+import html
+
+async def get_war_info(message) -> None:
+    try:
+        # Парсим сообщение, чтобы получить тег клана
+        parts = message.text.split()
+        clan_tag = parts[1] if len(parts) > 1 else CLAN_TAG
+
+        # Если тег не начинается с '#', добавляем его
+        if not clan_tag.startswith('#'):
+            clan_tag = '#' + clan_tag
+        
+        # Получаем информацию о войне
+        try:
+            war = await coc_api.coc_client.get_current_war(clan_tag)
+        except Exception as e:
+            await message.answer(f"⚠️ Ошибка при получении информации о войне.")
+            print(f"⚠️ Ошибка при получении информации о войне: {e}")
+            return None
+        
+        # Проверка на наличие информации о войне
+        if war == "private":
+            await message.answer("⚠️ Информация о войне недоступна (журнал войн закрыт).")
+            return
+        if war is None:
+            await message.answer("⚠️ Война не найдена или недоступна.")
+            return
+        if war.state == 'notInWar':
+            await message.answer("⚠️ Клан сейчас не воюет.")
+            return
+        
+        # Вычисляем оставшееся время
+        time_remaining = war.end_time.seconds_until
+        hours = time_remaining // 3600
+        minutes = (time_remaining % 3600) // 60
+        
+        # Формируем сообщение в зависимости от статуса
+        if war.state == 'preparation':
+            status_emoji = "⏳"
+            status_text = "ДЕНЬ ПОДГОТОВКИ"
+            time_text = f"До начала сражения: {hours-24}ч {minutes}м"
+        elif war.state == 'inWar':
+            status_emoji = "⚔️"
+            status_text = "ДЕНЬ СРАЖЕНИЯ"
+            time_text = f"До окончания войны: {hours}ч {minutes}м"
+        elif war.state == 'warEnded':
+            status_emoji = "🏁"
+            status_text = "ВОЙНА ЗАВЕРШЕНА"
+            time_text = f"Война закончилась {abs(hours)}ч {abs(minutes)}м назад"
+        else:
+            status_emoji = "❓"
+            status_text = f"Неизвестный статус: {war.state}"
+            time_text = ""
+        
+        # Формируем полное сообщение
+        response = (
+            f"{status_emoji} <b>{status_text}</b>\n\n"
+            f"🏰 <b>{war.clan.name}</b> VS <b>{war.opponent.name}</b>\n\n"
+            f"🟡 Звезды: {war.clan.stars}⭐️ : {war.opponent.stars}⭐️\n"
+            f"💥 Разрушения: {war.clan.destruction:.2f}% : {war.opponent.destruction:.2f}%\n"
+            f"⚔️ Атак использовано: {war.clan.attacks_used}/{war.team_size * 2}\n\n"
+            f"👥 Размер: {war.team_size} на {war.team_size}\n"
+            f"🕐 {time_text}"
+        )
+        await message.answer(response)
+
+    except Exception as e:
+        await message.answer("⚠️ Произошла ошибка при получении информации о войне.")
+        print(f"⚠️ Ошибка при обработке команды get_war_info: {e}")
