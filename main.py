@@ -1,3 +1,7 @@
+# NON-COMMERCIAL CLASH OF CLANS COMMUNITY LICENSE
+# Short summary: non-commercial use only.
+# Full license: LICENSES/NON-COMMERCIAL_FULL.md
+
 import asyncio
 import logging
 import sys

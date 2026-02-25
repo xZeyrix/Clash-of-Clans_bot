@@ -18,8 +18,8 @@ else:
     CHAT_ID = int(os.getenv("NOTIFICATION_CHAT_ID"))
     TALK_CHAT_ID = int(os.getenv("COMMUNICATION_CHAT_ID"))
 
-ADMIN_IDS = [1611458070, 417007190, 8376879508]
-DEV_ID = 1611458070
+ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_USER_IDS").split(",")]
+DEV_ID = os.getenv("DEVELOPER_USER_ID")
 BETA_TESTERS_IDS = []
 BETA_BANNED_IDS = []
 
