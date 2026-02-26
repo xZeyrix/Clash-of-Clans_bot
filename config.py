@@ -19,7 +19,7 @@ else:
     TALK_CHAT_ID = int(os.getenv("COMMUNICATION_CHAT_ID"))
 
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_USER_IDS").split(",")]
-DEV_ID = os.getenv("DEVELOPER_USER_ID")
+DEV_ID = int(os.getenv("DEVELOPER_USER_ID"))
 BETA_TESTERS_IDS = []
 BETA_BANNED_IDS = []
 

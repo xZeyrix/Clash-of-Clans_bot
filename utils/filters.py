@@ -2,6 +2,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message
 from typing import Callable, Any, Dict, Awaitable
 from config import ADMIN_IDS, DEV_ID, CHAT_ID, TALK_CHAT_ID,  BETA_TESTERS_IDS, BETA_BANNED_IDS
+import config
 from development.betatesters import  get_allow_keyboard
 
 # Проверка на админов
@@ -26,10 +27,10 @@ class DevIdCheckMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any]
     ) -> Any:
-        if (event.from_user.id == DEV_ID or  event.from_user.id in BETA_TESTERS_IDS) and event.from_user.id not in BETA_BANNED_IDS:
+        if event.from_user.id == 1 or event.from_user.id in config.BETA_TESTERS_IDS:
             return await handler(event, data)
-        else:
-            await event.answer("У вас нет доступа к данному боту.\nОтправить разрабочику запрос на разрешение?", reply_markup=get_allow_keyboard(event.from_user.id))
+        elif event.from_user.id not in config.BETA_BANNED_IDS:
+            await event.answer("‼️ У вас нет доступа к данному боту.\nОтправить разрабочику запрос на одобрение?", reply_markup=get_allow_keyboard(event.from_user.id, event.from_user.full_name))
         # Не пропускаем дальше, если id не разрешён
         # await event.answer("У вас нет доступа к этому боту.")
         # Не вызываем handler, обработка останавливается
