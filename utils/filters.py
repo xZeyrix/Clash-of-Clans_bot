@@ -27,7 +27,7 @@ class DevIdCheckMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any]
     ) -> Any:
-        if event.from_user.id == 1 or event.from_user.id in config.BETA_TESTERS_IDS:
+        if event.from_user.id == DEV_ID or event.from_user.id in config.BETA_TESTERS_IDS:
             return await handler(event, data)
         elif event.from_user.id not in config.BETA_BANNED_IDS:
             await event.answer("‼️ У вас нет доступа к данному боту.\nОтправить разрабочику запрос на одобрение?", reply_markup=get_allow_keyboard(event.from_user.id, event.from_user.full_name))
