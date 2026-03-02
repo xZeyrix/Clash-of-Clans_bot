@@ -4,6 +4,9 @@ import html
 
 async def get_war_info(message) -> None:
     try:
+        # Отправляем "печатаю..." для улучшения UX
+        msg = await message.answer("⌛ Получаю информацию о войне...")
+
         # Парсим сообщение, чтобы получить тег клана
         parts = message.text.split()
         clan_tag = parts[1] if len(parts) > 1 else CLAN_TAG
@@ -16,19 +19,19 @@ async def get_war_info(message) -> None:
         try:
             war = await coc_api.coc_client.get_current_war(clan_tag)
         except Exception as e:
-            await message.answer(f"⚠️ Ошибка при получении информации о войне.")
+            await msg.edit_text(f"⚠️ Такого клана не существует.")
             print(f"⚠️ Ошибка при получении информации о войне: {e}")
             return None
         
         # Проверка на наличие информации о войне
         if war == "private":
-            await message.answer("⚠️ Информация о войне недоступна (журнал войн закрыт).")
+            await msg.edit_text("⚠️ Информация о войне недоступна (журнал войн закрыт).")
             return
         if war is None:
-            await message.answer("⚠️ Война не найдена или недоступна.")
+            await msg.edit_text("⚠️ Война не найдена или недоступна.")
             return
         if war.state == 'notInWar':
-            await message.answer("⚠️ Клан сейчас не воюет.")
+            await msg.edit_text("⚠️ Клан сейчас не воюет.")
             return
         
         # Вычисляем оставшееся время
@@ -60,12 +63,12 @@ async def get_war_info(message) -> None:
             f"🏰 <b>{war.clan.name}</b> VS <b>{war.opponent.name}</b>\n\n"
             f"🟡 Звезды: {war.clan.stars}⭐️ : {war.opponent.stars}⭐️\n"
             f"💥 Разрушения: {war.clan.destruction:.2f}% : {war.opponent.destruction:.2f}%\n"
-            f"⚔️ Атак использовано: {war.clan.attacks_used}/{war.team_size * 2}\n\n"
+            f"⚔️ Атак использовано: {war.clan.attacks_used}/{war.team_size * 2} VS {war.opponent.attacks_used}/{war.team_size * 2}\n\n"
             f"👥 Размер: {war.team_size} на {war.team_size}\n"
             f"🕐 {time_text}"
         )
-        await message.answer(response)
+        await msg.edit_text(response)
 
     except Exception as e:
-        await message.answer("⚠️ Произошла ошибка при получении информации о войне.")
+        await msg.edit_text("⚠️ Произошла ошибка при получении информации о войне.")
         print(f"⚠️ Ошибка при обработке команды get_war_info: {e}")

@@ -1,7 +1,0 @@
-import requests
-API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjE3MjQ4NzI0LWJlNDItNGM5Ni1hN2NiLWQ0NmI2M2IyODJiNyIsImlhdCI6MTc3MTA3MDAwOCwic3ViIjoiZGV2ZWxvcGVyLzUyZDg4NTM4LWZjOTEtODJhMS0xNWRjLTQ0MmJiNTU0NGRiMiIsInNjb3BlcyI6WyJjbGFzaCJdLCJsaW1pdHMiOlt7InRpZXIiOiJkZXZlbG9wZXIvc2lsdmVyIiwidHlwZSI6InRocm90dGxpbmcifSx7ImNpZHJzIjpbIjM3Ljk5Ljg2LjI0Il0sInR5cGUiOiJjbGllbnQifV19.YUiEPpAHvvgUEfrAjkVVfh_rIXgo6ihDbx9MK7TnZiVfkbVVCjW0bmrBu7N_8J_HyYwWpL1EBQ9W5fyg9Zgo1w"
-tag = "%239G29PC8U"
-url = f"https://api.clashofclans.com/v1/clans/{tag}"
-response = requests.get(url, headers={"Authorization": f"Bearer {API_KEY}"})
-data = response.json()
-print(data)

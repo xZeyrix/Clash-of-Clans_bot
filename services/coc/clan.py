@@ -4,6 +4,9 @@ import html
 
 async def get_clan_info(message) -> None:
     try:
+        # Отправляем "печатаю..." для улучшения UX
+        msg = await message.answer("⌛ Получаю информацию о клане...")
+
         # Парсим сообщение, чтобы получить тег клана
         parts = message.text.split()
         clan_tag = parts[1] if len(parts) > 1 else CLAN_TAG
@@ -17,7 +20,7 @@ async def get_clan_info(message) -> None:
             # Убираем login_coc() отсюда - он должен быть вызван один раз при старте
             clan = await coc_api.coc_client.get_clan(clan_tag)
         except Exception as e:
-            await message.answer(f"⚠️ Ошибка при получении информации о клане.")
+            await msg.edit_text(f"⚠️ Такого клана не существует.")
             print(f"⚠️ Ошибка при получении информации о клане: {e}")
             return None
         
@@ -32,9 +35,9 @@ async def get_clan_info(message) -> None:
                 f"💬 Описание: {html.escape(clan.description) if clan.description else 'Нет описания'}\n"
                 f"🔗 Ссылка на клан: {clan.share_link}"
             )     
-            await message.answer(response)
+            await msg.edit_text(response)
         else:
-            await message.answer("⚠️ Клан не найден или недоступен.")
+            await msg.edit_text("⚠️ Клан не найден или недоступен.")
     except Exception as e:
-        await message.answer("⚠️ Произошла ошибка при получении информации о клане.")
+        await msg.edit_text("⚠️ Произошла ошибка при получении информации о клане.")
         print(f"⚠️ Ошибка при обработке команды get_clan_info: {e}")
