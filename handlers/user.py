@@ -2,6 +2,7 @@ import asyncio
 import logging
 from aiogram import Router, types, F
 from aiogram.filters import Command
+import html
 from utils.filters import PauseCheckMiddleware
 from data.texts import HELP_TEXT
 import config
@@ -36,7 +37,10 @@ async def navigate_rules(callback: types.CallbackQuery) -> None:
 @router.message(Command("smertniki"))
 async def smertniki_command_handler(message: types.Message) -> None:
     if config.SMERTNIKI:
-        await message.answer("📋 Список смертников:\n" + "\n".join(config.SMERTNIKI))
+        response = "📋 Список смертников:\n"
+        for i, nickname in enumerate(config.SMERTNIKI, 1):
+            response += f"{i}. {html.escape(nickname)}\n"
+        await message.answer(response)
     else:
         await message.answer("📋 Список смертников пуст.")
 
