@@ -31,7 +31,7 @@ async def get_war_day_number(league_group):
     try:
         day = 0
         async for war in league_group:
-            if war.state == 'inWar':
+            if war.state == 'inWar' or war.state == 'warEnded':
                 day += 1
         return day
     except:
