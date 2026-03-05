@@ -34,3 +34,15 @@ async def login_coc():
         else:
             print(f"⚠️ Ошибка при входе в Clash of Clans API через токен: {e} - {datetime.now(timezone(timedelta(hours=5))).isoformat()} РК")
         return False
+
+async def close_coc():
+    """Закрытие COC API клиента"""
+    global coc_client
+    if coc_client is not None:
+        try:
+            await coc_client.close()
+            print("✅ COC API клиент закрыт")
+        except Exception as e:
+            print(f"⚠️ Ошибка при закрытии COC клиента: {e}")
+        finally:
+            coc_client = None

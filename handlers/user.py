@@ -17,7 +17,7 @@ router.message.middleware(PauseCheckMiddleware())
 
 @router.message(Command("start"))
 async def start_command_handler(message: types.Message) -> None:
-    await message.answer("Привет! Я бот, который соориентирует тебя по нашему клану «Остров 65» в игре Clash of Clans." + "\n\n" + help_text(message.from_user.id))
+    await message.answer("Привет! Я бот, который соориентирует тебя по нашему клану «Остров 65» в игре Clash of Clans." + "\n\n" + help_text(message.from_user.id, message.from_user.full_name))
 
 @router.message(Command("help"))
 async def help_command_handler(message: types.Message) -> None:
