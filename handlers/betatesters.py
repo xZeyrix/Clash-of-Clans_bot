@@ -4,7 +4,7 @@ import config
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import html
 
-router =  Router()
+router = Router()
 
 def get_allow_keyboard(id: int, name: str):
     builder  = InlineKeyboardBuilder()
@@ -66,8 +66,3 @@ async def disallow_beta(callback: types.CallbackQuery) -> None:
         await callback.bot.send_message(user_id, "❌ Разработчик запретил вам использовать бота.\nПожалуйста, не отправляйте сообщения.")
     except Exception as e:
         await callback.answer("❌ Произошла ошибка")
-
-# ================== ЭТОТ ХЕНДЛЕР ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ ==================
-@router.message()
-async def text_message_handler(message: types.Message) -> None:
-    pass

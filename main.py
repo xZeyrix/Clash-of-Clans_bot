@@ -13,7 +13,7 @@ from aiogram.enums import ParseMode
 from config import BOT_TOKEN, DEV_MODE
 from handlers.user import router as user_router
 from handlers.admin import router as admin_router
-from development.betatesters import  router as dev_router
+from handlers.betatesters import  router as dev_router
 
 from utils.filters import DevIdCheckMiddleware, AllowedUsersMiddleware
 from utils.files import load_bot_state, load_smertniki
@@ -44,16 +44,16 @@ antimat = AntiMatMiddleware(moderation, bad_words=BAN_WORDS, long_bad_words=BAN_
 
 # Проверяем на маты, потом на спам
 dp.message.middleware(antimat)
+dp.edited_message.middleware(antimat)
 dp.message.middleware(antispam)
-dp.callback_query.middleware(antispam)
 
 async def main() -> None:
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
     # Регитсрация роутеров
     dp.include_router(admin_router)
-    dp.include_router(user_router)
     dp.include_router(dev_router)
+    dp.include_router(user_router)
 
     # Загрузка состояния бота и смертников
     await load_bot_state(bot)

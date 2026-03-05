@@ -16,6 +16,7 @@ from commands.smertniki import smertniki
 router = Router()
 if not DEV_MODE:
     router.message.middleware(AdminCheckMiddleware())
+    router.callback_query.middleware(AdminCheckMiddleware())
 
 # -----------------------------------------------
 #              Обработчики команд

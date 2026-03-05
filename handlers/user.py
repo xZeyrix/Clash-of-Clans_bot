@@ -4,23 +4,28 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 import html
 from utils.filters import PauseCheckMiddleware
-from data.texts import HELP_TEXT
+from data.texts import help_text, RULES_SHORT
 import config
 from commands.rules import RULES_LIST, get_navigation_keyboard
 from services.coc.clan import get_clan_info
 from services.coc.war import get_war_info
 from services.groqapi import voice_to_text
+from commands.adminModeration import admin_moderation_handler
 
 router = Router()
 router.message.middleware(PauseCheckMiddleware())
 
 @router.message(Command("start"))
 async def start_command_handler(message: types.Message) -> None:
-    await message.answer("Привет! Я бот, который соориентирует тебя по нашему клану «Остров 65» в игре Clash of Clans." + "\n\n" + HELP_TEXT)
+    await message.answer("Привет! Я бот, который соориентирует тебя по нашему клану «Остров 65» в игре Clash of Clans." + "\n\n" + help_text(message.from_user.id))
 
 @router.message(Command("help"))
 async def help_command_handler(message: types.Message) -> None:
-    await message.answer(HELP_TEXT)
+    await message.answer(help_text(message.from_user.id, message.from_user.full_name))
+
+@router.message(Command("short"))
+async def short_rules_command_handler(message: types.Message) -> None:
+    await message.answer(RULES_SHORT)
 
 @router.message(Command("rules"))
 async def rules_command_handler(message: types.Message) -> None:
@@ -39,7 +44,7 @@ async def smertniki_command_handler(message: types.Message) -> None:
     if config.SMERTNIKI:
         response = "📋 Список смертников:\n"
         for i, nickname in enumerate(config.SMERTNIKI, 1):
-            response += f"{i}. {html.escape(nickname)}\n"
+            response += f"<b>{i}.</b> {html.escape(nickname)}\n"
         await message.answer(response)
     else:
         await message.answer("📋 Список смертников пуст.")
@@ -89,3 +94,12 @@ async def voice_message_handler(message: types.Message) -> None:
     await response.edit_text(
         f"🔄️ Преобразовано в текст:\n\n{text}\n\n⏱️ Время распознавания: {elapsed:.2f} секунд"
     )
+
+# ================== ЭТОТ ХЕНДЛЕР ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ ==================
+@router.message()
+async def text_message_handler(message: types.Message) -> None:
+    if message.text.startswith("!"):
+        await admin_moderation_handler(message)
+@router.edited_message()
+async def edited_message_handler(message: types.Message) -> None:
+    pass

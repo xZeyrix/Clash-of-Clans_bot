@@ -4,7 +4,6 @@ import asyncio
 from aiogram import Bot
 from services.coc import coc_api
 from config import CLAN_TAG
-CLAN_TAG = "#2QU8R8CRU"
 
 war_monitor_active = False
 war_monitor_task = None 

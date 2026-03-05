@@ -11,12 +11,13 @@ load_dotenv()
 DEV_MODE = True
 
 # Telegram
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 if DEV_MODE:
-    CHAT_ID, TALK_CHAT_ID = int(os.getenv("DEV_NOTIFICATION_CHAT_ID")), int(os.getenv("DEV_NOTIFICATION_CHAT_ID"))
+    CHAT_ID, TALK_CHAT_ID = int(os.getenv("DEV_NOTIFICATION_CHAT_ID")), int(os.getenv("DEV_TALK_CHAT_ID"))
+    BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN_DEV')
 else:
     CHAT_ID = int(os.getenv("NOTIFICATION_CHAT_ID"))
     TALK_CHAT_ID = int(os.getenv("COMMUNICATION_CHAT_ID"))
+    BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_USER_IDS").split(",")]
 DEV_ID = int(os.getenv("DEVELOPER_USER_ID"))

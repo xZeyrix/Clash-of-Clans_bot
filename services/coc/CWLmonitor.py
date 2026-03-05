@@ -5,7 +5,6 @@ from config import CLAN_TAG, CHAT_ID, ADMIN_IDS
 import config
 from aiogram import Bot
 from utils.files import save_smertniki
-CLAN_TAG = "#2QU8R8CRU"
 
 # Состояния для отслеживания CWL
 cwl_previous_state = None

@@ -3,7 +3,7 @@ from aiogram.types import Message
 from typing import Callable, Any, Dict, Awaitable
 from config import ADMIN_IDS, DEV_ID, CHAT_ID, TALK_CHAT_ID,  BETA_TESTERS_IDS, BETA_BANNED_IDS
 import config
-from development.betatesters import  get_allow_keyboard
+from handlers.betatesters import  get_allow_keyboard
 
 # Проверка на админов
 class AdminCheckMiddleware(BaseMiddleware):
