@@ -6,6 +6,7 @@ import asyncio
 import re
 from collections import OrderedDict
 from config import TALK_CHAT_ID
+from services.groqapi import ai_moderation
 
 MAX_STORED_MESSAGES = 100  # Максимальное количество сохранённых сообщений для просмотра
 
@@ -111,7 +112,7 @@ class AntiMatMiddleware(BaseMiddleware):
         text = event.text.lower()
         
         # Считаем количество вхождений каждого слова
-        total_bad_words = 0
+        ban = False
         
         # Функция для нормализации текста (удаление спецсимволов и цифр)
         def normalize_text(s):
@@ -138,29 +139,54 @@ class AntiMatMiddleware(BaseMiddleware):
             for lat, cyr in replacements.items():
                 result = result.replace(lat, cyr)
             return result
-    
-        # Проверяем каждое слово
-        words = text.split()
+
+        ai = await ai_moderation(text)
+        reason = "Недопустимая лексика"
+
+        if ai != None:
+            if ai["violation"] == 1:
+                if ai["class"] == "ban":
+                    ban = True
+                    reason = ai["reason"]
+                elif ai["class"] == "warning":
+                    user_name = event.from_user.full_name
+                    reason = ai["reason"]
+                    try:
+                        await event.delete()
+                    except:
+                        pass
+                    message = await event.bot.send_message(
+                        chat_id=event.chat.id,
+                        text=(
+                            f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{user_name}</a> было удалено\n"
+                            f"📋 Причина: {reason}\n"
+                        ),
+                    )
+                    await asyncio.sleep(7)
+                    await message.delete()
+        else:
+            # Проверяем каждое слово
+            words = text.split()
+            
+            for word in words:
+                # Очищаем слово от спецсимволов
+                cleaned = normalize_text(word)
+                normalized = normalize_cyrillic_lookalikes(cleaned)
+                # Проверка 1: с заменой похожих символов
+                if normalized in self.bad_words:
+                    ban = True
+            # Проверка 2: потенциальные связки слов
+            if self.check_trigger_light_proximity(words, set(self.words_light), set(self.words_triggers), max_distance=3):
+                ban = True
+            # Проверка 3: длинные фразы
+            for long_word in self.long_bad_words:
+                cleaned_text = normalize_text(normalize_cyrillic_lookalikes(text))
+                if long_word in cleaned_text:
+                    ban = True
         
-        for word in words:
-            # Очищаем слово от спецсимволов
-            cleaned = normalize_text(word)
-            normalized = normalize_cyrillic_lookalikes(cleaned)
-            # Проверка 1: с заменой похожих символов
-            if normalized in self.bad_words:
-                total_bad_words += 1
-        # Проверка 2: потенциальные связки слов
-        if self.check_trigger_light_proximity(words, set(self.words_light), set(self.words_triggers), max_distance=3):
-            total_bad_words += 1
-        # Проверка 3: длинные фразы
-        for long_word in self.long_bad_words:
-            cleaned_text = normalize_text(normalize_cyrillic_lookalikes(text))
-            if long_word in cleaned_text:
-                total_bad_words += 1
-        
-        if total_bad_words > 0:
+        if ban:
             # Блокируем пользователя
-            self.moderation.ban_user(user_id, "Недопустимая лексика")
+            self.moderation.ban_user(user_id, reason)
             
             user_name = event.from_user.full_name
             minutes = self.moderation.ban_time // 60
@@ -185,8 +211,7 @@ class AntiMatMiddleware(BaseMiddleware):
                 text=(
                     f"🚫 <a href='tg://user?id={user_id}'>{user_name}</a> "
                     f"заблокирован на {minutes} мин!\n"
-                    f"📋 Причина: Недопустимая лексика\n"
-                    f"🔤 Найдено слов: {int(total_bad_words)}\n"
+                    f"📋 Причина: {reason}\n"
                     f"⚠️ Предупреждений: {warnings}"
                 ),
                 reply_markup=builder.as_markup()

@@ -78,7 +78,7 @@ async def voice_message_handler(message: types.Message) -> None:
         f"⏱️ Это займет около: {estimated_time:.2f} секунд"
         )
 
-    text, elapsed, BAN = await voice_to_text(message.bot, message.voice.file_id)
+    text, elapsed, BAN, reason = await voice_to_text(message.bot, message.voice.file_id)
 
     if not text:
         await response.edit_text("❌ Не удалось распознать речь.")
@@ -86,8 +86,8 @@ async def voice_message_handler(message: types.Message) -> None:
     
     if BAN:
         await message.delete()
-        await response.edit_text("🚫 Ваше голосовое сообщение содержит недопустимую лексику и было удалено.")
-        await asyncio.sleep(3)
+        await response.edit_text(f"🚫 Ваше голосовое сообщение содержит недопустимую лексику и было удалено.\nПричина: {reason}")
+        await asyncio.sleep(7)
         await response.delete()
         return
 
