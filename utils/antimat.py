@@ -140,30 +140,38 @@ class AntiMatMiddleware(BaseMiddleware):
                 result = result.replace(lat, cyr)
             return result
 
-        ai = await ai_moderation(text)
-        reason = "Недопустимая лексика"
+        async def safe_ai_moderation(text: str, timeout_sec: float = 2.5):
+            try:
+                return await asyncio.wait_for(ai_moderation(text), timeout=timeout_sec)
+            except asyncio.TimeoutError:
+                return None
+            except Exception:
+                return None
 
-        if ai != None:
-            if ai["violation"] == 1:
-                if ai["class"] == "ban":
-                    ban = True
-                    reason = ai["reason"]
-                elif ai["class"] == "warning":
-                    user_name = event.from_user.full_name
-                    reason = ai["reason"]
-                    try:
-                        await event.delete()
-                    except:
-                        pass
-                    message = await event.bot.send_message(
-                        chat_id=event.chat.id,
-                        text=(
-                            f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{user_name}</a> было удалено\n"
-                            f"📋 Причина: {reason}\n"
-                        ),
-                    )
-                    await asyncio.sleep(7)
-                    await message.delete()
+        ai = await safe_ai_moderation(text, timeout_sec=2.5)
+
+        if ai is not None and ai.get("violation") == 1:
+            cls = ai.get("class")
+            reason = ai.get("reason") or "Недопустимая лексика"
+
+            if cls == "ban":
+                ban = True
+            elif cls == "warning":
+                user_name = event.from_user.full_name
+                try:
+                    await event.delete()
+                except:
+                    pass
+                message = await event.bot.send_message(
+                    chat_id=event.chat.id,
+                    text=(
+                        f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{user_name}</a> было удалено\n"
+                        f"📋 Причина: {reason}\n"
+                    ),
+                )
+                await asyncio.sleep(10)
+                await message.delete()
+                return
         else:
             # Проверяем каждое слово
             words = text.split()
