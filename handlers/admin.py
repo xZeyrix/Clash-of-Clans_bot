@@ -74,6 +74,20 @@ async def war_monitor_status_handler(message: types.Message) -> None:
     
     await message.answer(f"📊 <b>Статус мониторинга войны:</b>\n{status}{task_status}")
 
+@router.message(Command("mod"))
+async def moderation_toggle_handler(message: types.Message) -> None:
+    parts = message.text.split(maxsplit=1)
+    if len(parts) != 2 or parts[1].lower() not in ["on", "off"]:
+        await message.answer("❗ Использование: /mod [on | off]")
+        return
+    
+    if parts[1].lower() == "on":
+        config.MODERATION_ENABLED = True
+        await message.answer("✅ Модерация включена")
+    elif parts[1].lower() == "off":
+        config.MODERATION_ENABLED = False
+        await message.answer("❎ Модерация отключена")
+
 # -----------------------------------------------
 #              Обработчики кнопок
 # -----------------------------------------------

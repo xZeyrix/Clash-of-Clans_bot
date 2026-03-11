@@ -10,6 +10,9 @@ load_dotenv()
 # Режим разработки (отключать при деплое)
 DEV_MODE = True
 
+# Moderation (On/Off)
+MODERATION_ENABLED = True
+
 # Telegram
 if DEV_MODE:
     CHAT_ID, TALK_CHAT_ID = int(os.getenv("DEV_NOTIFICATION_CHAT_ID")), int(os.getenv("DEV_TALK_CHAT_ID"))

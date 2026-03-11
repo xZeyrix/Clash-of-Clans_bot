@@ -6,6 +6,7 @@ import asyncio
 import re
 from collections import OrderedDict
 from config import TALK_CHAT_ID
+import config
 from services.groqapi import ai_moderation
 
 MAX_STORED_MESSAGES = 100  # Максимальное количество сохранённых сообщений для просмотра
@@ -71,7 +72,7 @@ class AntiMatMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any]
     ) -> Any:
-        if event.chat.id != TALK_CHAT_ID:
+        if event.chat.id != TALK_CHAT_ID or not config.MODERATION_ENABLED:
             return await handler(event, data)
 
         user_id = event.from_user.id
