@@ -5,11 +5,12 @@ from typing import Callable, Dict, Any, Awaitable, Union
 from collections import defaultdict
 from datetime import datetime, timedelta
 import asyncio
+from html import escape
 
 class AntiSpamMiddleware(BaseMiddleware):
     """Middleware для защиты от спама"""
     
-    def __init__(self, moderation_system, rate_limit: int = 10, time_window: int = 60):
+    def __init__(self, moderation_system, rate_limit: int = 15, time_window: int = 60):
         self.moderation = moderation_system
         self.rate_limit = rate_limit
         self.time_window = time_window
@@ -44,7 +45,8 @@ class AntiSpamMiddleware(BaseMiddleware):
 
         if is_banned:
             reason = self.moderation.get_ban_reason(user_id)
-            minutes = time_left // 60
+            hours = time_left // 3600
+            minutes = (time_left % 3600) // 60
             seconds = time_left % 60
             
             if isinstance(event, Message):
@@ -55,7 +57,7 @@ class AntiSpamMiddleware(BaseMiddleware):
                 message = await event.answer(
                     f"🚫 Вы заблокированы!\n"
                     f"📋 Причина: {reason}\n"
-                    f"⏱️ Осталось: {minutes}м {seconds}с"
+                    f"⏱️ Осталось: {hours}ч {minutes}м {seconds}с"
                 )
                 await asyncio.sleep(3)  # Удаляем уведомление через 5 секунд
                 try:
@@ -85,7 +87,8 @@ class AntiSpamMiddleware(BaseMiddleware):
             self.moderation.ban_user(user_id, "Спам")
             
             user_name = event.from_user.full_name
-            minutes = self.moderation.ban_time // 60
+            hours = self.moderation.ban_time // 3600
+            minutes = (self.moderation.ban_time % 3600) // 60
             warnings = self.moderation.get_warnings_count(user_id)
             
             # Создаём кнопки управления
@@ -103,8 +106,8 @@ class AntiSpamMiddleware(BaseMiddleware):
             message = await event.bot.send_message(
                 chat_id=event.chat.id,
                 text=(
-                    f"🚫 <a href='tg://user?id={user_id}'>{user_name}</a> "
-                    f"заблокирован на {minutes} мин!\n"
+                    f"🚫 <a href='tg://user?id={user_id}'>{escape(user_name)}</a> "
+                    f"заблокирован на {hours}ч {minutes}м!\n"
                     f"📋 Причина: Спам\n"
                     f"⚠️ Предупреждений: {warnings}"
                 ),

@@ -41,7 +41,7 @@ VIOLATION (mixed pattern with offensive commands):
 - "пошел нахуй я говно" → Contains "пошел нахуй" directed at another
 
 ## VIOLATES (1)
-- Commands with offensive/obscene words directed at others: "иди нахуй", "пошел нахуй", "соси хуй", "отвали нахрен", "вали [+ оскорбление]"
+- Commands with offensive/obscene words directed at others: "иди нахуй", "пошел нахуй", "соси хуй", "отвали нахрен", "вали [+ оскорбление]", "ты котакбас"
 - Direct insults to other people in any form
 - Flood/spam with no real meaning to clog the chat
 - Any kind of illegal advertisement resources that could potentially harm people

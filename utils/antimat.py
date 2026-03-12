@@ -8,6 +8,7 @@ from collections import OrderedDict
 from config import TALK_CHAT_ID
 import config
 from services.groqapi import ai_moderation
+from html import escape
 
 MAX_STORED_MESSAGES = 100  # Максимальное количество сохранённых сообщений для просмотра
 
@@ -86,7 +87,8 @@ class AntiMatMiddleware(BaseMiddleware):
 
         if is_banned:
             reason = self.moderation.get_ban_reason(user_id)
-            minutes = time_left // 60
+            hours = time_left // 3600
+            minutes = (time_left % 3600) // 60
             seconds = time_left % 60
             
             try:
@@ -97,7 +99,7 @@ class AntiMatMiddleware(BaseMiddleware):
             message = await event.answer(
                 f"🚫 Вы заблокированы!\n"
                 f"📋 Причина: {reason}\n"
-                f"⏱️ Осталось: {minutes}м {seconds}с"
+                f"⏱️ Осталось: {hours}ч {minutes}м {seconds}с"
             )
             await asyncio.sleep(3)  # Удаляем уведомление через 3 секунды
             try:
@@ -166,7 +168,7 @@ class AntiMatMiddleware(BaseMiddleware):
                 message = await event.bot.send_message(
                     chat_id=event.chat.id,
                     text=(
-                        f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{user_name}</a> было удалено\n"
+                        f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{escape(user_name)}</a> было удалено\n"
                         f"📋 Причина: {reason}\n"
                     ),
                 )
@@ -198,7 +200,8 @@ class AntiMatMiddleware(BaseMiddleware):
             self.moderation.ban_user(user_id, reason)
             
             user_name = event.from_user.full_name
-            minutes = self.moderation.ban_time // 60
+            hours = self.moderation.ban_time // 3600
+            minutes = (self.moderation.ban_time % 3600) // 60
             warnings = self.moderation.get_warnings_count(user_id)
             
             # Создаём кнопки
@@ -218,8 +221,8 @@ class AntiMatMiddleware(BaseMiddleware):
             message = await event.bot.send_message(
                 chat_id=event.chat.id,
                 text=(
-                    f"🚫 <a href='tg://user?id={user_id}'>{user_name}</a> "
-                    f"заблокирован на {minutes} мин!\n"
+                    f"🚫 <a href='tg://user?id={user_id}'>{escape(user_name)}</a> "
+                    f"заблокирован на {hours}ч {minutes}м!\n"
                     f"📋 Причина: {reason}\n"
                     f"⚠️ Предупреждений: {warnings}"
                 ),

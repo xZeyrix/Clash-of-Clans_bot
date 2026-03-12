@@ -40,7 +40,7 @@ else:
     dp.message.middleware(AllowedUsersMiddleware())
 
 # Система модерации
-moderation = ModerationSystem(ban_time=3600)
+moderation = ModerationSystem(ban_time=86400)
 moderation_module.moderation = moderation
 
 # Подключаем мидлвари

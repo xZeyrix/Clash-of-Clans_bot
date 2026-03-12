@@ -4,14 +4,14 @@ from config import CHAT_ID
 
 async def admin_moderation_handler(message):
     if not message.reply_to_message:
-        response = await message.answer("❗ Чтобы использовать эту команду, вы должны ответить на сообщение пользователя, против которого собираетесь принять меры.\n\nДоступные команды: !unmute | !kick\nПример использования: !unmute [причина]")
+        response = await message.answer("❗ Чтобы использовать эту команду, вы должны ответить на сообщение пользователя, против которого собираетесь принять меры.\n\nДоступные команды: !unban | !kick\nПример использования: !unmute [причина]")
         await asyncio.sleep(7)
         await response.delete()
         return
     parts = message.text.split(maxsplit=1)
     reason = html.escape(parts[1]) if len(parts) == 2 else "Причина не указана"
     user_id = message.reply_to_message.from_user.id
-    if parts[0] == "!unmute":
+    if parts[0] == "!unban":
         try:
             from utils.moderation import moderation
             moderation.unban_user(user_id)
@@ -21,7 +21,7 @@ async def admin_moderation_handler(message):
             await response.delete()
             return
         except Exception as e:
-            response = await message.answer("❌ Не удалось разбанить пользователя.\nВозможно, он уже не в муте или произошла ошибка.")
+            response = await message.answer("❌ Не удалось разбанить пользователя.\nВозможно, он уже не в бане или произошла ошибка.")
             await asyncio.sleep(3)
             await response.delete()
             return

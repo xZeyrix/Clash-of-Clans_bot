@@ -97,7 +97,7 @@ async def check_war_status(bot: Bot):
             
             # Вычисляем оставшееся время
             time_remaining = current_war.end_time.seconds_until
-            hours_remaining = time_remaining // 3600
+            hours_remaining = (time_remaining // 3600) - 1
             minutes_remaining = (time_remaining % 3600) // 60
             
             # Уведомление о начале дня сражения
@@ -252,18 +252,19 @@ async def check_war_status(bot: Bot):
                             our_clan = clan
                             break
                     
-                    if our_clan:
-                        message = (
-                            f"🏆 <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\n"
-                            f"📊 <b>Итоги сезона:</b>\n"
-                            f"🏰 Клан: {our_clan.name}\n"
-                            f"🎖 Место: #{league_group.clans.index(our_clan) + 1} из {len(league_group.clans)}\n"
-                            f"⭐️ Всего звёзд: {sum(getattr(clan, 'stars', 0) for clan in league_group.clans if clan.tag == CLAN_TAG)}\n\n"
-                            f"Спасибо всем за участие! 💪"
-                        )
-                    else:
-                        message = f"🏆 <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\nСпасибо всем за участие! 💪"
+                    # if our_clan:
+                    #     message = (
+                    #         f"🏆 <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\n"
+                    #         f"📊 <b>Итоги сезона:</b>\n"
+                    #         f"🏰 Клан: {our_clan.name}\n"
+                    #         f"🎖 Место: #{league_group.clans.index(our_clan) + 1} из {len(league_group.clans)}\n"
+                    #         f"⭐️ Всего звёзд: {sum(getattr(clan, 'stars', 0) for clan in league_group.clans if clan.tag == CLAN_TAG)}\n\n"
+                    #         f"Спасибо всем за участие! 💪"
+                    #     )
+                    # else:
+                    #     message = f"🏆 <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\nСпасибо всем за участие! 💪"
                     
+                    message = f"❗ <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\nНа данный момент бот не способен самостоятельно подводить итоги\nПоэтому админы, пожалуйста, отправьте боту через команду /send скриншот результатов"
                     await bot.send_message(CHAT_ID, message)
                     cwl_ended_notified = True
                     print("✅ Отправлено уведомление об окончании CWL")
