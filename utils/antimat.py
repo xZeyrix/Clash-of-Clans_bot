@@ -165,6 +165,8 @@ class AntiMatMiddleware(BaseMiddleware):
                     await event.delete()
                 except:
                     pass
+                if text.startswith("/ai "):
+                    return await handler(event, data)
                 message = await event.bot.send_message(
                     chat_id=event.chat.id,
                     text=(
@@ -230,6 +232,8 @@ class AntiMatMiddleware(BaseMiddleware):
             )
             # Сохраняем ID сообщения с кнопками
             self.moderation.set_ban_message(user_id, event.chat.id, message.message_id)
+            if text.startswith("/ai "):
+                return await handler(event, data)
             return  # ← Не вызываем handler
         
         # Всё ок - пропускаем

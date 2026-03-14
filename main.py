@@ -48,9 +48,9 @@ antispam = AntiSpamMiddleware(moderation, rate_limit=10, time_window=60)
 antimat = AntiMatMiddleware(moderation, bad_words=BAN_WORDS, long_bad_words=BAN_LONG, words_light=BAN_LIGHT, words_triggers=BAN_TRIGGERS)
 
 # Проверяем на маты, потом на спам
+dp.message.middleware(antispam)
 dp.message.middleware(antimat)
 dp.edited_message.middleware(antimat)
-dp.message.middleware(antispam)
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
