@@ -1,0 +1,5 @@
+python-dotenv
+coc.py
+groq
+aiogram
+asyncio
