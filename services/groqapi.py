@@ -99,7 +99,7 @@ async def ai_chat(message):
         if message.text.startswith("/ai"):
             parts = message.text.split(maxsplit=1)
             if len(parts) < 2 or not parts[1].strip():
-                await message.answer("❗ Напишите запрос после команды.\nНапример: /ai расскажи про клановые войны")
+                await message.answer("❗ Напишите запрос после команды.\nНапример: /ai расскажи про клановые войны\nТакже, вы можете обратиться ко мне по имени без команды - просто «Асуна»")
                 return
             text = parts[1]
         else:
