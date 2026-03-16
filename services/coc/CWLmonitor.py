@@ -97,11 +97,11 @@ async def check_war_status(bot: Bot):
             
             # Вычисляем оставшееся время
             time_remaining = current_war.end_time.seconds_until
-            hours_remaining = (time_remaining // 3600) - 1
+            hours_remaining = time_remaining // 3600
             minutes_remaining = (time_remaining % 3600) // 60
             
             # Уведомление о начале дня сражения
-            if not notifications['war_started']:
+            if hours_remaining < 23 and not notifications['war_started']:
                 members_no_attacks = [m.name for m in current_war.clan.members if len(m.attacks) == 0]
                 message = (
                     f"⚔️ <b>ДЕНЬ {war_day} - БИТВА НАЧАЛАСЬ!</b>\n\n"
@@ -117,7 +117,7 @@ async def check_war_status(bot: Bot):
             
             # Уведомления о времени (только во время боя)
             # Осталось 12 часов
-            if hours_remaining <= 12 and not notifications['hours_12']:
+            if hours_remaining < 12 and not notifications['hours_12']:
                 members_no_attacks = [m.name for m in current_war.clan.members if len(m.attacks) == 0]
                 message = (
                     f"⏰ <b>ДЕНЬ {war_day} - ОСТАЛОСЬ 12 ЧАСОВ!</b>\n\n"
@@ -135,7 +135,7 @@ async def check_war_status(bot: Bot):
                 print(f"✅ Отправлено уведомление: День {war_day}, осталось 12 часов")
             
             # Осталось 6 часов
-            if hours_remaining <= 6 and not notifications['hours_6']:
+            if hours_remaining < 6 and not notifications['hours_6']:
                 members_no_attacks = [m.name for m in current_war.clan.members if len(m.attacks) == 0]
                 message = (
                     f"⏰ <b>ДЕНЬ {war_day} - ОСТАЛОСЬ 6 ЧАСОВ!</b>\n\n"
@@ -153,7 +153,7 @@ async def check_war_status(bot: Bot):
                 print(f"✅ Отправлено уведомление: День {war_day}, осталось 6 часов")
             
             # Осталось 3 часа
-            if hours_remaining <= 3 and not notifications['hours_3']:
+            if hours_remaining < 3 and not notifications['hours_3']:
                 members_no_attacks = [m.name for m in current_war.clan.members if len(m.attacks) == 0]
                 message = (
                     f"⏰ <b>ДЕНЬ {war_day} - ОСТАЛОСЬ 3 ЧАСА!</b>\n\n"
@@ -171,7 +171,7 @@ async def check_war_status(bot: Bot):
                 print(f"✅ Отправлено уведомление: День {war_day}, осталось 3 часа")
             
             # Осталось 1 час
-            if hours_remaining <= 1 and not notifications['hours_1']:
+            if hours_remaining < 1 and not notifications['hours_1']:
                 members_no_attacks = [m.name for m in current_war.clan.members if len(m.attacks) == 0]
                 message = (
                     f"🚨 <b>ДЕНЬ {war_day} - ПОСЛЕДНИЙ ЧАС!</b>\n\n"
