@@ -104,6 +104,9 @@ async def voice_message_handler(message: types.Message) -> None:
 async def text_message_handler(message: types.Message) -> None:
     if message.text.startswith("!"):
         await admin_moderation_handler(message)
+    if not message.text.startswith("/ai") and "асуна" in message.text.lower():
+        await ai_chat(message)
+
 @router.edited_message()
 async def edited_message_handler(message: types.Message) -> None:
     pass

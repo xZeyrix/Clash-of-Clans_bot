@@ -113,6 +113,7 @@ class AntiMatMiddleware(BaseMiddleware):
             return await handler(event, data)
         
         text = event.text.lower()
+        reason = "Недопустимая лексика"
         
         # Считаем количество вхождений каждого слова
         ban = False
@@ -152,32 +153,33 @@ class AntiMatMiddleware(BaseMiddleware):
                 return None
 
         ai = await safe_ai_moderation(text, timeout_sec=2.5)
+        try:
+            if ai is not None and ai.get("violation") == 1:
+                cls = ai.get("class")
+                reason = ai.get("reason") or reason
 
-        if ai is not None and ai.get("violation") == 1:
-            cls = ai.get("class")
-            reason = ai.get("reason") or "Недопустимая лексика"
-
-            if cls == "ban":
-                ban = True
-            elif cls == "warning":
-                user_name = event.from_user.full_name
-                try:
-                    await event.delete()
-                except:
-                    pass
-                if text.startswith("/ai "):
-                    return await handler(event, data)
-                message = await event.bot.send_message(
-                    chat_id=event.chat.id,
-                    text=(
-                        f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{escape(user_name)}</a> было удалено\n"
-                        f"📋 Причина: {reason}\n"
-                    ),
-                )
-                await asyncio.sleep(10)
-                await message.delete()
-                return
-        else:
+                if cls == "ban":
+                    ban = True
+                elif cls == "warning":
+                    user_name = event.from_user.full_name
+                    try:
+                        await event.delete()
+                    except:
+                        pass
+                    message = await event.bot.send_message(
+                        chat_id=event.chat.id,
+                        text=(
+                            f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{escape(user_name)}</a> было удалено\n"
+                            f"📋 Причина: {reason}\n"
+                        ),
+                    )
+                    await asyncio.sleep(10)
+                    await message.delete()
+                    return
+        except Exception as e:
+            ai = None
+            print("🔴 Модерация выдала ошибочный формат ответа")
+        if ai is None:
             # Проверяем каждое слово
             words = text.split()
             
@@ -232,8 +234,6 @@ class AntiMatMiddleware(BaseMiddleware):
             )
             # Сохраняем ID сообщения с кнопками
             self.moderation.set_ban_message(user_id, event.chat.id, message.message_id)
-            if text.startswith("/ai "):
-                return await handler(event, data)
             return  # ← Не вызываем handler
         
         # Всё ок - пропускаем
