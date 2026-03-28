@@ -7,7 +7,6 @@ from config import GROQ_API_KEY
 from data.texts import BAN_WORDS, BAN_LONG
 import re
 from data.moderationPrompt import prompt as modPrompt
-from data.aiPrompt import prompt as aiPrompt
 
 client = AsyncGroq(api_key=GROQ_API_KEY)
 

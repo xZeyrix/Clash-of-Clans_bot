@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Режим разработки (отключать при деплое)
-DEV_MODE = False
+DEV_MODE = True
 
 # Moderation (On/Off)
 MODERATION_ENABLED = True
@@ -36,7 +36,10 @@ CLAN_TAG = os.getenv("CLAN_TAG")
 COC_API_TOKEN = os.getenv("COC_API_TOKEN")
 
 # Groq API
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if DEV_MODE:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY_DEV")
+else:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Пути к файлам
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -7,7 +7,6 @@ import re
 from collections import OrderedDict
 from config import TALK_CHAT_ID
 import config
-from services.groqapi import ai_moderation
 from html import escape
 
 MAX_STORED_MESSAGES = 100  # Максимальное количество сохранённых сообщений для просмотра
@@ -20,6 +19,147 @@ class LimiteDict(OrderedDict):
 
 recently_deleted = LimiteDict()
 
+
+def normalize_text(s: str) -> str:
+    return re.sub(r'[^а-яёa-z]', '', s)
+
+
+def normalize_cyrillic_lookalikes(s: str) -> str:
+    replacements = {
+        'o': 'о', 'c': 'с', 'e': 'е', 'p': 'р',
+        'a': 'а', 'b': 'в', 'h': 'н', 'k': 'к',
+        'm': 'м', 't': 'т', 'x': 'х', 'y': 'у',
+    }
+    result = s
+    for lat, cyr in replacements.items():
+        result = result.replace(lat, cyr)
+    return result
+
+
+def check_trigger_light_proximity(words: list, light_words: set, trigger_words: set, max_distance: int = 3) -> bool:
+    """Проверяет, находятся ли триггер и light-слово рядом (не дальше max_distance слов)."""
+    light_positions = []
+    trigger_positions = []
+
+    for i, word in enumerate(words):
+        cleaned = normalize_text(word)
+        normalized = normalize_cyrillic_lookalikes(cleaned)
+
+        if normalized in light_words:
+            light_positions.append(i)
+        if normalized in trigger_words:
+            trigger_positions.append(i)
+
+    for light_pos in light_positions:
+        for trigger_pos in trigger_positions:
+            if abs(light_pos - trigger_pos) <= max_distance:
+                return True
+
+    return False
+
+
+def regex_fallback_moderation(
+    text: str,
+    bad_words: list[str],
+    long_bad_words: list[str],
+    words_light: list[str],
+    words_triggers: list[str],
+) -> dict:
+    """Локальная (без LLM) проверка на нарушение. Формат совместим с ai_moderation."""
+    text = (text or "").lower()
+    if not text:
+        return {"violation": 0, "class": "safe", "reason": ""}
+
+    ban = False
+    words = text.split()
+
+    for word in words:
+        cleaned = normalize_text(word)
+        normalized = normalize_cyrillic_lookalikes(cleaned)
+        if normalized in bad_words:
+            ban = True
+            break
+
+    if not ban and check_trigger_light_proximity(words, set(words_light), set(words_triggers), max_distance=3):
+        ban = True
+
+    if not ban:
+        cleaned_text = normalize_text(normalize_cyrillic_lookalikes(text))
+        for long_word in long_bad_words:
+            if long_word in cleaned_text:
+                ban = True
+                break
+
+    if ban:
+        return {"violation": 1, "class": "ban", "reason": "Недопустимая лексика"}
+
+    return {"violation": 0, "class": "safe", "reason": ""}
+
+
+async def apply_moderation_result(event: Message, moderation_system, result: dict) -> bool:
+    """Применяет результат модерации к сообщению. Возвращает True, если действие выполнено."""
+    if not result or result.get("violation") != 1:
+        return False
+
+    user_id = event.from_user.id
+    user_name = event.from_user.full_name
+    reason = result.get("reason") or "Недопустимая лексика"
+    cls = result.get("class")
+
+    if cls == "warning":
+        try:
+            await event.delete()
+        except Exception:
+            pass
+        message = await event.bot.send_message(
+            chat_id=event.chat.id,
+            text=(
+                f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{escape(user_name)}</a> было удалено\n"
+                f"📋 Причина: {reason}\n"
+            ),
+        )
+        await asyncio.sleep(10)
+        try:
+            await message.delete()
+        except Exception:
+            pass
+        return True
+
+    if cls != "ban":
+        return False
+
+    moderation_system.ban_user(user_id, reason)
+
+    hours = moderation_system.ban_time // 3600
+    minutes = (moderation_system.ban_time % 3600) // 60
+    warnings = moderation_system.get_warnings_count(user_id)
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🟢 Разблокировать", callback_data=f"unban_user:{user_id}")
+    builder.button(text="🔴 Выгнать из группы", callback_data=f"kick_user:{user_id}")
+    builder.button(text="✅ Оставить наказание", callback_data=f"keep_ban:{user_id}")
+    builder.button(text="📩 Посмотреть сообщение", callback_data=f"view_message:{user_id}")
+    builder.adjust(1)
+
+    try:
+        await event.delete()
+    except Exception:
+        pass
+
+    recently_deleted[user_id] = event.text or ""
+    message = await event.bot.send_message(
+        chat_id=event.chat.id,
+        text=(
+            f"🚫 <a href='tg://user?id={user_id}'>{escape(user_name)}</a> "
+            f"заблокирован на {hours}ч {minutes}м!\n"
+            f"📋 Причина: {reason}\n"
+            f"⚠️ Предупреждений: {warnings}"
+        ),
+        reply_markup=builder.as_markup()
+    )
+    moderation_system.set_ban_message(user_id, event.chat.id, message.message_id)
+    return True
+
 class AntiMatMiddleware(BaseMiddleware):
     """Middleware для фильтрации матов"""
     
@@ -31,42 +171,7 @@ class AntiMatMiddleware(BaseMiddleware):
         self.words_triggers = [word.lower() for word in words_triggers]
         super().__init__()
     def check_trigger_light_proximity(self, words: list, light_words: set, trigger_words: set, max_distance: int = 3) -> bool:
-        """
-        Проверяет, находятся ли триггер и light-слово рядом (не дальше max_distance слов)
-        """
-        def normalize_text(s: str) -> str:
-            return re.sub(r'[^а-яёa-z]', '', s)
-        
-        def normalize_cyrillic_lookalikes(s: str) -> str:
-            replacements = {
-                'o': 'о', 'c': 'с', 'e': 'е', 'p': 'р',
-                'a': 'а', 'b': 'в', 'h': 'н', 'k': 'к',
-                'm': 'м', 't': 'т', 'x': 'х', 'y': 'у',
-            }
-            result = s
-            for lat, cyr in replacements.items():
-                result = result.replace(lat, cyr)
-            return result
-        
-        light_positions = []
-        trigger_positions = []
-        
-        for i, word in enumerate(words):
-            cleaned = normalize_text(word)
-            normalized = normalize_cyrillic_lookalikes(cleaned)
-            
-            if normalized in light_words:
-                light_positions.append(i)
-            if normalized in trigger_words:
-                trigger_positions.append(i)
-        
-        # Проверяем расстояние между любыми парами
-        for light_pos in light_positions:
-            for trigger_pos in trigger_positions:
-                if abs(light_pos - trigger_pos) <= max_distance:
-                    return True
-        
-        return False
+        return check_trigger_light_proximity(words, light_words, trigger_words, max_distance)
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
@@ -112,129 +217,6 @@ class AntiMatMiddleware(BaseMiddleware):
         if not event.text:
             return await handler(event, data)
         
-        text = event.text.lower()
-        reason = "Недопустимая лексика"
-        
-        # Считаем количество вхождений каждого слова
-        ban = False
-        
-        # Функция для нормализации текста (удаление спецсимволов и цифр)
-        def normalize_text(s):
-            return re.sub(r'[^а-яёa-z]', '', s)
-        
-        # Функция для замены кириллицы, похожей на латиницу
-        def normalize_cyrillic_lookalikes(s):
-            # Заменяем похожие символы: о->о, с->с, е->е и т.д.
-            replacements = {
-                'o': 'о',  # латинское O на кириллицу О
-                'c': 'с',  # латинское C на кириллицу С
-                'e': 'е',  # латинское E на кириллицу Е
-                'p': 'р',  # латинское P на кириллицу Р
-                'a': 'а',  # латинское A на кириллицу А
-                'b': 'в',  # латинское B на кириллицу В
-                'h': 'н',  # латинское H на кириллицу Н
-                'k': 'к',  # латинское K на кириллицу К
-                'm': 'м',  # латинское M на кириллицу М
-                't': 'т',  # латинское T на кириллицу Т
-                'x': 'х',  # латинское X на кириллицу Х
-                'y': 'у',  # латинское Y на кириллицу У
-            }
-            result = s
-            for lat, cyr in replacements.items():
-                result = result.replace(lat, cyr)
-            return result
-
-        async def safe_ai_moderation(text: str, timeout_sec: float = 2.5):
-            try:
-                return await asyncio.wait_for(ai_moderation(text), timeout=timeout_sec)
-            except asyncio.TimeoutError:
-                return None
-            except Exception:
-                return None
-
-        ai = await safe_ai_moderation(text, timeout_sec=2.5)
-        try:
-            if ai is not None and ai.get("violation") == 1:
-                cls = ai.get("class")
-                reason = ai.get("reason") or reason
-
-                if cls == "ban":
-                    ban = True
-                elif cls == "warning":
-                    user_name = event.from_user.full_name
-                    try:
-                        await event.delete()
-                    except:
-                        pass
-                    message = await event.bot.send_message(
-                        chat_id=event.chat.id,
-                        text=(
-                            f"❗ Сообщение пользователя <a href='tg://user?id={user_id}'>{escape(user_name)}</a> было удалено\n"
-                            f"📋 Причина: {reason}\n"
-                        ),
-                    )
-                    await asyncio.sleep(10)
-                    await message.delete()
-                    return
-        except Exception as e:
-            ai = None
-            print("🔴 Модерация выдала ошибочный формат ответа")
-        if ai is None:
-            # Проверяем каждое слово
-            words = text.split()
-            
-            for word in words:
-                # Очищаем слово от спецсимволов
-                cleaned = normalize_text(word)
-                normalized = normalize_cyrillic_lookalikes(cleaned)
-                # Проверка 1: с заменой похожих символов
-                if normalized in self.bad_words:
-                    ban = True
-            # Проверка 2: потенциальные связки слов
-            if self.check_trigger_light_proximity(words, set(self.words_light), set(self.words_triggers), max_distance=3):
-                ban = True
-            # Проверка 3: длинные фразы
-            for long_word in self.long_bad_words:
-                cleaned_text = normalize_text(normalize_cyrillic_lookalikes(text))
-                if long_word in cleaned_text:
-                    ban = True
-        
-        if ban:
-            # Блокируем пользователя
-            self.moderation.ban_user(user_id, reason)
-            
-            user_name = event.from_user.full_name
-            hours = self.moderation.ban_time // 3600
-            minutes = (self.moderation.ban_time % 3600) // 60
-            warnings = self.moderation.get_warnings_count(user_id)
-            
-            # Создаём кнопки
-            builder = InlineKeyboardBuilder()
-            builder.button(text="🟢 Разблокировать", callback_data=f"unban_user:{user_id}")
-            builder.button(text="🔴 Выгнать из группы", callback_data=f"kick_user:{user_id}")
-            builder.button(text="✅ Оставить наказание", callback_data=f"keep_ban:{user_id}")
-            builder.button(text="📩 Посмотреть сообщение", callback_data=f"view_message:{user_id}")
-            builder.adjust(1)
-            
-            try:
-                await event.delete()
-            except:
-                pass
-            
-            recently_deleted[user_id] = event.text  # Сохраняем удалённое сообщение для просмотра
-            message = await event.bot.send_message(
-                chat_id=event.chat.id,
-                text=(
-                    f"🚫 <a href='tg://user?id={user_id}'>{escape(user_name)}</a> "
-                    f"заблокирован на {hours}ч {minutes}м!\n"
-                    f"📋 Причина: {reason}\n"
-                    f"⚠️ Предупреждений: {warnings}"
-                ),
-                reply_markup=builder.as_markup()
-            )
-            # Сохраняем ID сообщения с кнопками
-            self.moderation.set_ban_message(user_id, event.chat.id, message.message_id)
-            return  # ← Не вызываем handler
-        
-        # Всё ок - пропускаем
+        # Основная модерация перенесена в AICheckMessage.
+        # Здесь оставляем только проверку активного бана и пропуск дальше.
         return await handler(event, data)
