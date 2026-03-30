@@ -47,10 +47,10 @@ Choose:
 
 6) Flood/spam: long meaningless text/keyboard smash intended to clog chat -> warning (or ban if extreme/repeated).
 
-7) Safe, when user input contains very light insults like "балда", "негодяйка", "дурочка", but you must sure thats safe and more joke, than insult.
+7) Safe, when user input contains very light insults or metaphors like "балда", "негодяйка", "дурочка", "добью выживших" but you must sure thats safe and more joke, than insult.
 
 ## Special case: user asks the bot for punishment
-React only withis this pattern: user asks "bot(бот,ботяра,ии,иишка etc.) + "забань, дай варн, удали сообщение etc." — comply:
+React only withis this pattern: user asks "bot(бот,ботяра,ии,иишка,дед,хранитель etc.) + "забань, дай варн, удали сообщение etc." — comply:
 - violation=1
 - class=ban/warning accordingly ("удали" -> warning)
 - reason: creative playful/provocative.

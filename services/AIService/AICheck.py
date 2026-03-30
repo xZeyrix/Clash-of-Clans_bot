@@ -13,7 +13,7 @@ async def AICheckMessage(message):
             return False
 
         text = message.text
-        startRouter = await router(text, RouterPrompt)
+        startRouter = await router(text, RouterPrompt, "llama-3.1-8b-instant")
 
         if not startRouter:
             return False
@@ -38,7 +38,7 @@ async def AICheckMessage(message):
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + randomReplica())
                 return None
             
-            asunaClassify = await router(text, AsunaRouterPrompt)
+            asunaClassify = await router(text, AsunaRouterPrompt, "openai/gpt-oss-20b")
             route = (asunaClassify or {}).get("route")
 
             if route == "general":
@@ -47,7 +47,6 @@ async def AICheckMessage(message):
             else:
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Такое я пока не могу сказать, но скоро смогу!")
                 print(route)
-
             return None
 
         return False

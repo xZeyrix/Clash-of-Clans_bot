@@ -30,10 +30,10 @@ async def promptguard(message, detect):
         print(f"🔴 Promptguard unexpected error:: {e}")
         return None
 
-async def router(message, prompt):
+async def router(message, prompt, model):
     try:
         completion = await client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=model,
             messages=[
                 {
                     "role": "system",
