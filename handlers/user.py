@@ -9,7 +9,7 @@ import config
 from commands.rules import RULES_LIST, get_navigation_keyboard
 from services.coc.clan import get_clan_info
 from services.coc.war import get_war_info
-from services.groqapi import voice_to_text, ai_chat
+from services.AIService.groqapi import voice_to_text
 from commands.adminModeration import admin_moderation_handler
 from services.AIService.AICheck import AICheckMessage
 
@@ -61,10 +61,6 @@ async def clan_command_handler(message: types.Message) -> None:
 @router.message(Command("war"))
 async def war_command_handler(message: types.Message) -> None:
     await get_war_info(message)
-
-@router.message(Command("ai"))
-async def ai_chat_command_handler(message: types.Message) -> None:
-    await ai_chat(message)
 
 @router.message(F.voice)
 async def voice_message_handler(message: types.Message) -> None:
