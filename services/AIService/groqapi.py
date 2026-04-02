@@ -46,10 +46,11 @@ async def router(message, prompt, model):
             ],
             temperature=0,
             top_p=1.0,
-            max_tokens=100
+            max_tokens=500
         )
         try:
             response = json.loads(completion.choices[0].message.content)
+            print(response)
             return response
         except json.JSONDecodeError:
             print("🔴 AIRouter error: The model output was not json. Probably prompt injection from user.")
@@ -57,11 +58,12 @@ async def router(message, prompt, model):
         print(f"🔴 AIRouter unexpected error: {e}")
         return False
 
-async def asuna(message, prompt):
+async def asuna(message, prompt, model):
     try:
         completion = await client.chat.completions.create(
             # model="llama-3.3-70b-versatile",
-            model="openai/gpt-oss-120b",
+            # model="openai/gpt-oss-120b",
+            model=model,
             messages=[
                 {
                     "role": "system",
@@ -72,8 +74,8 @@ async def asuna(message, prompt):
                     "content": message
                 }
             ],
-            temperature=0.72,
-            top_p=0.88,
+            temperature=0.9,
+            top_p=0.95,
             max_tokens=500
         )
         response = completion.choices[0].message.content

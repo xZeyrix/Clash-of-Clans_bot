@@ -1,11 +1,19 @@
 from services.AIService.groqapi import router, asuna, promptguard, ai_moderation
 from data.SystemPrompts.RouterPrompt import RouterPrompt
 from data.SystemPrompts.AsunaRouterPrompt import AsunaRouterPrompt
-from data.SystemPrompts.aiPrompt import prompt
+from data.SystemPrompts.aiPrompt import prompt as generalPrompt
+from data.SystemPrompts.aiCocPrompt import prompt as cocPrompt
+from data.SystemPrompts.aiMemberPrompt import prompt as memberPrompt
+from data.SystemPrompts.aiRulesPrompt import prompt as rulesPrompt
+from data.SystemPrompts.aiSmertnikiPrompt import prompt as smertnikiPrompt
 from services.AIService.AsunaJailbreakPhrases import randomReplica
 from data.texts import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
 from utils.antimat import regex_fallback_moderation, apply_moderation_result
 from utils import moderation as moderation_module
+import config
+import json
+from commands.smertniki import smertnikiAdd, smertnikiRemove, smertnikiClear
+from data.texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES
 
 async def AICheckMessage(message):
     try:
@@ -32,6 +40,8 @@ async def AICheckMessage(message):
 
         if action == "to_asuna":
             response = await message.answer("💫 <b>Асуна</b>:\n\nПечатаю...")
+            gptoss120b = "openai/gpt-oss-120b"
+            llama70b = "llama-3.3-70b-versatile"
 
             promptInjection = await promptguard(text, 0.5)
             if promptInjection:
@@ -39,15 +49,64 @@ async def AICheckMessage(message):
                 return None
             
             asunaClassify = await router(text, AsunaRouterPrompt, "openai/gpt-oss-20b")
-            route = (asunaClassify or {}).get("route")
+            route = asunaClassify.get("route")
 
             if route == "general":
-                output = await asuna(text, prompt)
+                output = await asuna(text, generalPrompt, gptoss120b)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
+            elif route == "coc":
+                param = asunaClassify.get("coc_mode")
+                if param == "clan_members":
+                    pass
+                elif param == "current_war":
+                    pass
+                elif param == "raids":
+                    pass
+                elif param == "clan_info":
+                    pass
+                elif param.startswith("strategies_"):
+                    pass
+                elif param.startswith("layouts_"):
+                    pass
+            elif route == "rules":
+                param = asunaClassify.get("rules_part")
+                rules = {
+                    "short": RULES_SHORT,
+                    "main": RULES_MAIN,
+                    "cw": RULES_CW,
+                    "cwl": RULES_CWL,
+                    "events": RULES_EVENTS,
+                    "raids": RULES_RAIDS,
+                    "kicks": RULES_PENALTIES,
+                    "roles": RULES_ROLES
+                }
+                rule = rules[param]
+                prompt = rulesPrompt + rule
+
+                output = await asuna(text, prompt, llama70b)
+                await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
+            elif route == "smertniki":
+                param = asunaClassify.get("smertniki_action")
+                prompt = smertnikiPrompt + (str(config.SMERTNIKI) if config.SMERTNIKI else "Список смертников пуст")
+
+                output = await asuna(text, prompt, llama70b)
+                output = json.loads(output)
+                users = output["users"]
+                if message.from_user.id in config.ADMIN_IDS or param == "list" or param == "info":
+                    await response.edit_text("💫 <b>Асуна</b>:\n\n" + output["text"])
+                    if param == "add":
+                        smertnikiAdd(users)
+                    elif param == "remove":
+                        smertnikiRemove(users)
+                    elif param == "clear":
+                        smertnikiClear()
+                else:
+                    await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Нетушки. Я что-то не вижу в тебе админа, так что отказано")
+            elif route == "member":
+                param = asunaClassify.get("member_name")
             else:
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Такое я пока не могу сказать, но скоро смогу!")
                 print(route)
-            return None
 
         return False
 

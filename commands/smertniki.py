@@ -3,6 +3,35 @@ import config
 import html
 from config import CHAT_ID
 
+def smertnikiAdd(names):
+    nicknames = [name.strip() for name in names.split(',')]
+    output = []
+    for nickname in nicknames:
+        if nickname not in config.SMERTNIKI:
+            config.SMERTNIKI.append(nickname)
+            output.append(nickname)
+    save_smertniki()
+    if not output:
+        return False
+    else:
+        return output
+def smertnikiRemove(names):
+    indexes = [int(i.strip()) - 1 for i in names.split(',')]
+    indexes.sort(reverse=True)
+    deleted_users = []
+    for index in indexes:
+        if 0 <= index < len(config.SMERTNIKI):
+            user = config.SMERTNIKI[index]
+            del config.SMERTNIKI[index]
+            deleted_users.append(user)
+    save_smertniki()
+    if not deleted_users:
+        return False
+    else:
+        return deleted_users
+def smertnikiClear():
+    config.SMERTNIKI.clear()
+    save_smertniki()
 async def smertniki(message, id=None):
     parts = message.text.split(maxsplit=2)
     if len(parts) < 2:
@@ -13,13 +42,7 @@ async def smertniki(message, id=None):
         if len(parts) < 3:
             await message.answer("❌ Укажите никнейм для добавления.\nПример: /sm add gamer123 или /sm add user1,user2,user3")
             return
-        nicknames = [name.strip() for name in parts[2].split(',')]
-        output = []
-        for nickname in nicknames:
-            if nickname not in config.SMERTNIKI:
-                config.SMERTNIKI.append(nickname)
-                output.append(nickname)
-        save_smertniki()
+        output = smertnikiAdd(parts[2])
         if not output:
             await message.answer("❗ Указанные никнеймы уже есть в списке смертников.")
             return
@@ -30,15 +53,7 @@ async def smertniki(message, id=None):
             await message.answer("❌ Укажите ID для удаления.\nПример: /sm rm 1 или /sm rm 1,2,3")
             return
         try:
-            indexes = [int(i.strip()) - 1 for i in parts[2].split(',')]
-            indexes.sort(reverse=True)
-            deleted_users = []
-            for index in indexes:
-                if 0 <= index < len(config.SMERTNIKI):
-                    user = config.SMERTNIKI[index]
-                    del config.SMERTNIKI[index]
-                    deleted_users.append(user)
-            save_smertniki()
+            deleted_users = smertnikiRemove(parts[2])
             if not deleted_users:
                 await message.answer("❗ Указанные ID не найдены в списке смертников.")
                 return
@@ -50,8 +65,7 @@ async def smertniki(message, id=None):
         if not config.SMERTNIKI:
             await message.answer("❗ Список смертников уже пуст.")
             return
-        config.SMERTNIKI.clear()
-        save_smertniki()
+        smertnikiClear()
         await message.answer("✅ Список смертников очищен.")
         await message.bot.send_message(CHAT_ID, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> очистил список смертников.")
     elif command == 'list':
