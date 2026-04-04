@@ -32,23 +32,43 @@ async def promptguard(message, detect):
 
 async def router(message, prompt, model):
     try:
-        completion = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": prompt
-                },
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
-            temperature=0,
-            top_p=1.0,
-            max_tokens=500
-        )
+        if model == "llama-3.1-8b-instant":
+            completion = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": message
+                    }
+                ],
+                temperature=0,
+                top_p=1.0,
+                max_tokens=100,
+            )
+        else:
+            completion = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": message
+                    }
+                ],
+                temperature=0,
+                top_p=1.0,
+                max_tokens=100,
+                reasoning_effort="low"
+            )
         try:
+            print(completion)
             response = json.loads(completion.choices[0].message.content)
             print(response)
             return response

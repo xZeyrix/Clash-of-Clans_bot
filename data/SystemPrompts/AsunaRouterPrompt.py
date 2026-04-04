@@ -22,19 +22,20 @@ ROUTING (priority top→down)
 - Any clan rules / criteria / allowed vs forbidden.
 - IMPORTANT: for war topics choose rules (NOT coc) when the user asks for reasons, conditions or future:
 	- "почему я не в кв/лвк", "почему не поставили", "за что не ставят"
-	- "поставят ли меня", "когда поставят", "возьмут ли", "что сделать чтобы попасть"
+	- "поставят ли меня", "возьмут ли", "что сделать чтобы попасть"
 
 3) coc (only factual data from the game right now)
 - Choose coc ONLY when the user clearly wants current Clash of Clans data:
 	- current war / CWL roster/status/result/timers: "поставили ли меня в кв", "я в кв?", "кто стоит в лвк?"
 	- clan members list/count
-	- raids info
+	- raids info: "когда дни рейдов?", "когда рейд начнется?"
 	- clan info (tag/link/name/etc.)
 	- strategies or base layouts for a TH level (ТХ/TH/ратуша).
 
 4) member
 - About a specific person by nickname: "кто такой X", "знаешь X?", "что с X?".
 - NOT member when asking for in-game status like "X в кв?" (that is coc/current_war).
+- NOT member when asking for in-game status like "есть ли X в клане?" (that is coc/clan_members)
 
 5) general
 - Any other normal Asuna conversation.

@@ -105,4 +105,4 @@ async def text_message_handler(message: types.Message) -> None:
 
 @router.edited_message()
 async def edited_message_handler(message: types.Message) -> None:
-    pass
+    await AICheckMessage(message)

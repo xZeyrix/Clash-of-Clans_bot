@@ -1,7 +1,7 @@
 from services.AIService.groqapi import router, asuna, promptguard, ai_moderation
 from data.SystemPrompts.RouterPrompt import RouterPrompt
 from data.SystemPrompts.AsunaRouterPrompt import AsunaRouterPrompt
-from data.SystemPrompts.aiPrompt import prompt as generalPrompt
+from data.SystemPrompts.aiPrompt import longPrompt as generalPrompt
 from data.SystemPrompts.aiCocPrompt import prompt as cocPrompt
 from data.SystemPrompts.aiMemberPrompt import prompt as memberPrompt
 from data.SystemPrompts.aiRulesPrompt import prompt as rulesPrompt
@@ -14,13 +14,22 @@ import config
 import json
 from commands.smertniki import smertnikiAdd, smertnikiRemove, smertnikiClear
 from data.texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES
+from utils.cocCommands import get_clan_info, get_clan_members, get_clan_war, get_cwl_prep_members, get_cwl_status, get_raids
 
 async def AICheckMessage(message):
     try:
-        if not message.text:
+        if message.text:
+            text = message.text
+        elif message.caption:
+            text = message.caption
+        else:
             return False
+        
+        promptInjection = await promptguard(text, 0.7)
+        if promptInjection:
+            await message.answer("💫 <b>Асуна</b>:\n\n" + randomReplica())
+            return None
 
-        text = message.text
         startRouter = await router(text, RouterPrompt, "llama-3.1-8b-instant")
 
         if not startRouter:
@@ -42,11 +51,6 @@ async def AICheckMessage(message):
             response = await message.answer("💫 <b>Асуна</b>:\n\nПечатаю...")
             gptoss120b = "openai/gpt-oss-120b"
             llama70b = "llama-3.3-70b-versatile"
-
-            promptInjection = await promptguard(text, 0.5)
-            if promptInjection:
-                await response.edit_text("💫 <b>Асуна</b>:\n\n" + randomReplica())
-                return None
             
             asunaClassify = await router(text, AsunaRouterPrompt, "openai/gpt-oss-20b")
             route = asunaClassify.get("route")
@@ -56,18 +60,18 @@ async def AICheckMessage(message):
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "coc":
                 param = asunaClassify.get("coc_mode")
-                if param == "clan_members":
-                    pass
-                elif param == "current_war":
-                    pass
-                elif param == "raids":
-                    pass
-                elif param == "clan_info":
-                    pass
-                elif param.startswith("strategies_"):
-                    pass
-                elif param.startswith("layouts_"):
-                    pass
+                if param.startswith("strategies_") or param.startswith("layouts_"):
+                    prompt = cocPrompt + "Не нашлось подходящих стратегий/расстановок. Ответь, что ты в этом не разбираешься."
+                else:
+                    cocCommands = {
+                        "clan_members": get_clan_members(),
+                        "current_war": get_clan_war(),
+                        "raids": get_raids(),
+                        "clan_info": get_clan_info(),
+                    }
+                    prompt = cocPrompt + str(cocCommands[param])
+                output = await asuna(text, prompt, llama70b)
+                await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "rules":
                 param = asunaClassify.get("rules_part")
                 rules = {
