@@ -99,7 +99,9 @@ async def voice_message_handler(message: types.Message) -> None:
 # ================== ЭТОТ ХЕНДЛЕР ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ ==================
 @router.message()
 async def text_message_handler(message: types.Message) -> None:
-    if message.text.startswith("!"):
+    text = message.text or message.caption or ""
+
+    if text.startswith("!"):
         await admin_moderation_handler(message)
     await AICheckMessage(message)
 

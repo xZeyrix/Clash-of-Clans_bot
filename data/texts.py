@@ -462,3 +462,12 @@ RULES_PENALTIES = (
     "<b>ЕСЛИ ВАС ВЫГНАЛИ</b>\n"
     "Не беда! Если Соруководители/Глава уверены, что вы изменились, то вам дадут второй шанс."
 )
+RULES_INFO = (
+    "Ссылки выводи как есть тут. В валидных html тегах. Выводи только ту ссылку, которую требует пользователь.\n"
+    "Ссылка на основной клан (Остров 65): <a href='https://link.clashofclans.com/en?action=OpenClanProfile&tag=%239G29PC8U'>тык</a>\n"
+    "Ссылка на второй клан (академка - Побережье 65): <a href='https://link.clashofclans.com/en?action=OpenClanProfile&tag=%232JQJ9YUC9'>тык</a>\n"
+    "Ссылка на тг группу с уведомлениями бота (обычно говорят 'вторая группа'): <a href='https://t.me/notificationsOstrov65'>тык</a>\n"
+    "Ссылка на ютуб канал итзу (itzu - ютубер по clash of clans): <a href='https://www.youtube.com/@itzueng-clashofclans'>тык</a>\n"
+    "Ссылка магазин clash of clans (supercell store): <a href='https://store.supercell.com/ru/clashofclans'>тык</a>\n"
+    "ВАЖНО! Проверь валидность html тегов. Если ссылки которую требует пользователь нет в этом пакете данных - ТЫ ОБЯЗАНА вежливо сказать, что у тебя нет нужной ссылки"
+)

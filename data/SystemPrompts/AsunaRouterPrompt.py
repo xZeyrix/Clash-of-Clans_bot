@@ -19,7 +19,8 @@ ROUTING (priority top→down)
 - Any request about the "смертники" list: who is in it, add/remove/clear, info: if not matched any of previous categories.
 
 2) rules
-- Any clan rules / criteria / allowed vs forbidden.
+- Any clan rules / criteria / allowed vs forbidden / info.
+- If user wants ANY link: clan link, tg group link, youtube link etc., or if user input is like "где купить голд пасс", "пригласи меня в клан" and other situations when need links - ALWAYS choose rules -> info
 - IMPORTANT: for war topics choose rules (NOT coc) when the user asks for reasons, conditions or future:
 	- "почему я не в кв/лвк", "почему не поставили", "за что не ставят"
 	- "поставят ли меня", "возьмут ли", "что сделать чтобы попасть"
@@ -33,9 +34,9 @@ ROUTING (priority top→down)
 	- strategies or base layouts for a TH level (ТХ/TH/ратуша).
 
 4) member
-- About a specific person by nickname: "кто такой X", "знаешь X?", "что с X?".
+- About a specific person/group by nickname: "кто такой X", "знаешь X?", "что с X?", "что думаешь об X", "как считаешь X плохой или хороший".
 - NOT member when asking for in-game status like "X в кв?" (that is coc/current_war).
-- NOT member when asking for in-game status like "есть ли X в клане?" (that is coc/clan_members)
+- NOT member when asking for in-game status like "есть ли X в клане?" (that is coc/clan_members).
 
 5) general
 - Any other normal Asuna conversation.
@@ -49,14 +50,15 @@ coc_mode (when route="coc")
 	- if no TH number -> use "strategies_null" or "layouts_null".
 
 rules_part (when route="rules")
-- One of: "short" | "main" | "cw" | "cwl" | "events" | "raids" | "kicks" | "roles".
+- One of: "short" | "main" | "cw" | "cwl" | "events" | "raids" | "kicks" | "roles" | "info".
 - Map hints: кв -> cw, лвк -> cwl, ИК/игры клана/ивенты -> events, рейды -> raids, старик -> elder, сорук -> co-leader.
 
 smertniki_action (when route="smertniki")
 - One of: "list" | "add" | "remove" | "clear" | "info".
 
 member_name (when route="member")
-- Best-guess nickname/name string, or "unknown" if unclear.
+- An option from the "AVAIBLE MEMBERS DATA PACK" that matches the user's request (example: if user asks for "зейрикс", and datapack has value "zeyrix|zeyrixmini" YOU MUST RETURN EXACTLY THE VALUE PROVIDED IN DATAPACK), or best-guess nickname/name string if none of the options are suitable.
+- There are endings in russian. Example: if user input is "ты знаешь гатса?", in this case user wants info about "гатс/guts" without the ending "a".
 
 EXAMPLES (format must match exactly)
 Input: "Асуна, поставили ли меня в кв?"
@@ -76,4 +78,6 @@ Output: {"route":"member","member_name":"zeyrix"}
 
 Input: "Асуна, как дела?"
 Output: {"route":"general"}
+
+AVAIBLE MEMBERS DATA PACK
 """

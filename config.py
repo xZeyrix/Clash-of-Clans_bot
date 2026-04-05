@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Режим разработки (отключать при деплое)
-DEV_MODE = True
+DEV_MODE = False
 
 # Moderation (On/Off)
 MODERATION_ENABLED = True
@@ -47,4 +47,5 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 SMERTNIKI_FILE = os.path.join(DATA_DIR, "smertniki.json")
 STATE_FILE = os.path.join(DATA_DIR, "bot_state.json")
 SMERTNIKI_LOG = os.path.join(DATA_DIR, "smertniki.log")
-SMERTNIKI = []
+SMERTNIKI = list()
+ASUNA_HISTORY = dict()

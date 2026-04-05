@@ -12,12 +12,17 @@ from utils.antimat import regex_fallback_moderation, apply_moderation_result
 from utils import moderation as moderation_module
 import config
 import json
+import html
+from data.people import people
 from commands.smertniki import smertnikiAdd, smertnikiRemove, smertnikiClear
-from data.texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES
-from utils.cocCommands import get_clan_info, get_clan_members, get_clan_war, get_cwl_prep_members, get_cwl_status, get_raids
+from data.texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES, RULES_INFO
+from utils.cocCommands import get_clan_info, get_clan_members, get_war_status, get_cwl_prep_members, get_cwl_status, get_raids
 
 async def AICheckMessage(message):
     try:
+        if message.chat.id != config.TALK_CHAT_ID and message.chat.id != config.ADMIN_IDS[0]:
+            return False
+
         if message.text:
             text = message.text
         elif message.caption:
@@ -25,17 +30,37 @@ async def AICheckMessage(message):
         else:
             return False
         
+        history = list()
         promptInjection = await promptguard(text, 0.7)
         if promptInjection:
             await message.answer("💫 <b>Асуна</b>:\n\n" + randomReplica())
             return None
 
-        startRouter = await router(text, RouterPrompt, "llama-3.1-8b-instant")
+        reply = message.reply_to_message
+        reply_text = (reply.text or reply.caption or "") if reply else ""
 
-        if not startRouter:
-            return False
+        is_reply_to_bot = bool(
+            reply
+            and reply.from_user
+            and message.bot
+            and reply.from_user.id == message.bot.id
+        )
 
-        action = startRouter.get("action")
+        # Чтобы не реагировать на reply к любому сообщению бота,
+        # ограничиваемся только сообщениями с префиксом Асуны.
+        is_reply_to_asuna = is_reply_to_bot and reply_text.startswith("💫 Асуна:")
+
+        if is_reply_to_asuna:
+            action = "to_asuna"
+            try:
+                history = config.ASUNA_HISTORY[message.from_user.id]
+            except:
+                history = list()
+        else:
+            startRouter = await router(text, RouterPrompt, "llama-3.1-8b-instant", history)
+            if not startRouter:
+                return False
+            action = startRouter.get("action")
 
         if action == "to_safeguard":
             ai_result = await ai_moderation(text)
@@ -52,11 +77,12 @@ async def AICheckMessage(message):
             gptoss120b = "openai/gpt-oss-120b"
             llama70b = "llama-3.3-70b-versatile"
             
-            asunaClassify = await router(text, AsunaRouterPrompt, "openai/gpt-oss-20b")
+            asunaClassifyPrompt = AsunaRouterPrompt + str(people.keys())
+            asunaClassify = await router(text, asunaClassifyPrompt, "openai/gpt-oss-20b", history)
             route = asunaClassify.get("route")
 
             if route == "general":
-                output = await asuna(text, generalPrompt, gptoss120b)
+                output = await asuna(text, generalPrompt, gptoss120b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "coc":
                 param = asunaClassify.get("coc_mode")
@@ -64,13 +90,13 @@ async def AICheckMessage(message):
                     prompt = cocPrompt + "Не нашлось подходящих стратегий/расстановок. Ответь, что ты в этом не разбираешься."
                 else:
                     cocCommands = {
-                        "clan_members": get_clan_members(),
-                        "current_war": get_clan_war(),
-                        "raids": get_raids(),
-                        "clan_info": get_clan_info(),
+                        "clan_members": await get_clan_members(),
+                        "current_war": await get_war_status(),
+                        "raids": await get_raids(),
+                        "clan_info": await get_clan_info(),
                     }
                     prompt = cocPrompt + str(cocCommands[param])
-                output = await asuna(text, prompt, llama70b)
+                output = await asuna(text, prompt, llama70b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "rules":
                 param = asunaClassify.get("rules_part")
@@ -82,36 +108,51 @@ async def AICheckMessage(message):
                     "events": RULES_EVENTS,
                     "raids": RULES_RAIDS,
                     "kicks": RULES_PENALTIES,
-                    "roles": RULES_ROLES
+                    "roles": RULES_ROLES,
+                    "info": RULES_INFO
                 }
                 rule = rules[param]
                 prompt = rulesPrompt + rule
 
-                output = await asuna(text, prompt, llama70b)
+                output = await asuna(text, prompt, llama70b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "smertniki":
                 param = asunaClassify.get("smertniki_action")
                 prompt = smertnikiPrompt + (str(config.SMERTNIKI) if config.SMERTNIKI else "Список смертников пуст")
 
-                output = await asuna(text, prompt, llama70b)
+                output = await asuna(text, prompt, llama70b, history)
                 output = json.loads(output)
                 users = output["users"]
                 if message.from_user.id in config.ADMIN_IDS or param == "list" or param == "info":
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output["text"])
                     if param == "add":
                         smertnikiAdd(users)
+                        await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> добавляет в список смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                     elif param == "remove":
                         smertnikiRemove(users)
+                        await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> удаляет из списка смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                     elif param == "clear":
                         smertnikiClear()
+                        await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> очищает список смертников по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                 else:
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Нетушки. Я что-то не вижу в тебе админа, так что отказано")
             elif route == "member":
                 param = asunaClassify.get("member_name")
+                try:
+                    prompt = memberPrompt + people[param]
+                except:
+                    prompt = memberPrompt + "Данные отсутствуют."
+
+                output = await asuna(text, prompt, llama70b, history)
+                await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             else:
-                await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Такое я пока не могу сказать, но скоро смогу!")
+                await response.edit_text("💫 <b>Асуна</b>:\n\n" + "An error occurred. Try again.")
                 print(route)
 
+            if route != "smertniki":
+                config.ASUNA_HISTORY[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output}]
+            else:
+                config.ASUNA_HISTORY[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output["text"]}]
         return False
 
     except Exception as e:

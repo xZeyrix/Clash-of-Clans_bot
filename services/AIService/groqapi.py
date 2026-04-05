@@ -30,21 +30,26 @@ async def promptguard(message, detect):
         print(f"🔴 Promptguard unexpected error:: {e}")
         return None
 
-async def router(message, prompt, model):
+async def router(message, prompt, model, history=[]):
     try:
+        system = [
+            {
+                "role": "system",
+                "content": prompt
+            }
+        ]
+        user = [
+            {
+                "role": "user",
+                "content": message
+            }
+        ]
+        messages = system + history + user
+        print(messages)
         if model == "llama-3.1-8b-instant":
             completion = await client.chat.completions.create(
                 model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": message
-                    }
-                ],
+                messages=messages,
                 temperature=0,
                 top_p=1.0,
                 max_tokens=100,
@@ -52,19 +57,10 @@ async def router(message, prompt, model):
         else:
             completion = await client.chat.completions.create(
                 model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": message
-                    }
-                ],
+                messages=messages,
                 temperature=0,
                 top_p=1.0,
-                max_tokens=100,
+                max_tokens=200,
                 reasoning_effort="low"
             )
         try:
@@ -73,27 +69,32 @@ async def router(message, prompt, model):
             print(response)
             return response
         except json.JSONDecodeError:
-            print("🔴 AIRouter error: The model output was not json. Probably prompt injection from user.")
+            print("🔴 AIRouter error: The model output was not json. Probably inappropriate content.")
+            return {"route": "general"}
     except Exception as e:
         print(f"🔴 AIRouter unexpected error: {e}")
         return False
 
-async def asuna(message, prompt, model):
+async def asuna(message, prompt, model, history=[]):
     try:
+        system = [
+            {
+                "role": "system",
+                "content": prompt
+            }
+        ]
+        user = [
+            {
+                "role": "user",
+                "content": message
+            }
+        ]
+        messages = system + history + user
         completion = await client.chat.completions.create(
             # model="llama-3.3-70b-versatile",
             # model="openai/gpt-oss-120b",
             model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": prompt
-                },
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
+            messages=messages,
             temperature=0.9,
             top_p=0.95,
             max_tokens=500
