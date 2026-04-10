@@ -33,7 +33,10 @@ bot_paused = False
 COC_EMAIL = os.getenv("COC_EMAIL")
 COC_PASSWORD = os.getenv("COC_PASSWORD")
 CLAN_TAG = os.getenv("CLAN_TAG")
-COC_API_TOKEN = os.getenv("COC_API_TOKEN")
+if DEV_MODE:
+    COC_API_TOKEN = os.getenv("COC_API_TOKEN_DEV")
+else:
+    COC_API_TOKEN = os.getenv("COC_API_TOKEN")
 
 # Groq API
 if DEV_MODE:

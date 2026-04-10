@@ -90,12 +90,13 @@ async def AICheckMessage(message):
                     prompt = cocPrompt + "Не нашлось подходящих стратегий/расстановок. Ответь, что ты в этом не разбираешься."
                 else:
                     cocCommands = {
-                        "clan_members": await get_clan_members(),
-                        "current_war": await get_war_status(),
-                        "raids": await get_raids(),
-                        "clan_info": await get_clan_info(),
+                        "clan_members": get_clan_members,
+                        "current_war": get_war_status,
+                        "raids": get_raids,
+                        "clan_info": get_clan_info,
                     }
-                    prompt = cocPrompt + str(cocCommands[param])
+                    result = await cocCommands[param]()
+                    prompt = cocPrompt + str(result)
                 output = await asuna(text, prompt, llama70b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "rules":

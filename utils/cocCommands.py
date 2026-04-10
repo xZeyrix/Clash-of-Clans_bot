@@ -130,7 +130,7 @@ async def get_war_status():
                             except Exception as e:
                                 members.append({"ник": member["name"], "тх": member["townhallLevel"], "атаки": "0 из 1"})
                         return {"тип": "лвк", "статус": warState, "день": f"{warDay} из 7", "размер": f"{warTeamSize} на {warTeamSize}", "звезды (мы vs противник)": f"{clanStars}/{warTeamSize*3} VS {opponentStars}/{warTeamSize*3}", "атаки (мы vs противник)": f"{clanAttacks}/{warTeamSize} VS {opponentAttacks}/{warTeamSize}", "начало": startTime, "конец (после конца идет след день)": endTime, "текущее время": currentTime, "участники": members}
-    except:
+    except Exception as e:
         print(f"🔴 Произошла ошибка get_war_status: {e}")
         return "В ходе получения данных о войне произошла ошибка. Ответь пользователю, что тебе лень выполнять его запрос. А также, порекомендуй ему ввести команду /war."
 
