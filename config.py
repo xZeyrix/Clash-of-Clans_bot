@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Режим разработки (отключать при деплое)
-DEV_MODE = False
+DEV_MODE = True
 
 # Moderation (On/Off)
 MODERATION_ENABLED = True

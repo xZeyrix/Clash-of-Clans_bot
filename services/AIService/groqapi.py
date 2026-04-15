@@ -45,7 +45,6 @@ async def router(message, prompt, model, history=[]):
             }
         ]
         messages = system + history + user
-        print(messages)
         if model == "llama-3.1-8b-instant":
             completion = await client.chat.completions.create(
                 model=model,
@@ -64,7 +63,6 @@ async def router(message, prompt, model, history=[]):
                 reasoning_effort="low"
             )
         try:
-            print(completion)
             response = json.loads(completion.choices[0].message.content)
             print(response)
             return response

@@ -18,15 +18,15 @@ ROUTING (priority top→down)
 1) smertniki
 - Any request about the "смертники" list: who is in it, add/remove/clear, info: if not matched any of previous categories.
 
-2) rules
+2) rules (coc has more priority than this one)
 - Any clan rules / criteria / allowed vs forbidden / info.
 - If user wants ANY link: clan link, tg group link, youtube link etc., or if user input is like "где купить голд пасс", "пригласи меня в клан" and other situations when need links - ALWAYS choose rules -> info
-- IMPORTANT: for war topics choose rules (NOT coc) when the user asks for reasons, conditions or future:
+- IMPORTANT: for war topics choose rules WHEN the user asks for reasons or conditions:
 	- "почему я не в кв/лвк", "почему не поставили", "за что не ставят"
 	- "поставят ли меня", "возьмут ли", "что сделать чтобы попасть"
 
-3) coc (only factual data from the game right now)
-- Choose coc ONLY when the user clearly wants current Clash of Clans data:
+3) coc (only factual data from the game, has more priority than rules)
+- Choose coc ONLY when the user clearly wants current Clash of Clans data OR you think that the user wants rules but you're not sure:
 	- current war / CWL roster/status/result/timers: "поставили ли меня в кв", "я в кв?", "кто стоит в лвк?"
 	- clan members list/count
 	- raids info: "когда дни рейдов?", "когда рейд начнется?"

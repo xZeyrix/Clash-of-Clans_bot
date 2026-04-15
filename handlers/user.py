@@ -14,7 +14,8 @@ from commands.adminModeration import admin_moderation_handler
 from services.AIService.AICheck import AICheckMessage
 
 router = Router()
-router.message.middleware(PauseCheckMiddleware())
+if not config.DEV_MODE:
+    router.message.middleware(PauseCheckMiddleware())
 
 @router.message(Command("start"))
 async def start_command_handler(message: types.Message) -> None:

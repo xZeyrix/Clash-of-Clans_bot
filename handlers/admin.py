@@ -103,6 +103,7 @@ async def unban_user_handler(callback: types.CallbackQuery) -> None:
     
     if success:
         await callback.answer("✅ Пользователь разблокирован")
+        await callback.bot.send_message(chat_id=callback.message.chat.id, text=f"❗ Пользователь <a></a> был разблокирован админом <a href='tg://user?id={callback.from_user.id}'>{callback.from_user.full_name}</a>")
         # ← УДАЛЯЕМ СООБЩЕНИЕ С КНОПКАМИ
         await moderation.delete_ban_message(user_id, callback.bot)
     else:
