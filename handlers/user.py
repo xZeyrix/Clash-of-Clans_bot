@@ -102,9 +102,9 @@ async def voice_message_handler(message: types.Message) -> None:
 async def text_message_handler(message: types.Message) -> None:
     text = message.text or message.caption or ""
 
-    if text.startswith("!"):
+    ai = await AICheckMessage(message)
+    if text.startswith("!") and ai:
         await admin_moderation_handler(message)
-    await AICheckMessage(message)
 
 @router.edited_message()
 async def edited_message_handler(message: types.Message) -> None:

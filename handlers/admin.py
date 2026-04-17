@@ -103,7 +103,7 @@ async def unban_user_handler(callback: types.CallbackQuery) -> None:
     
     if success:
         await callback.answer("✅ Пользователь разблокирован")
-        await callback.bot.send_message(chat_id=callback.message.chat.id, text=f"❗ Пользователь <a></a> был разблокирован админом <a href='tg://user?id={callback.from_user.id}'>{callback.from_user.full_name}</a>")
+        await callback.bot.send_message(chat_id=callback.message.chat.id, text=f"❗ Пользователь <a href='tg://user?id={user_id}'>{user_id}</a> был разблокирован админом <a href='tg://user?id={callback.from_user.id}'>{callback.from_user.full_name}</a>")
         # ← УДАЛЯЕМ СООБЩЕНИЕ С КНОПКАМИ
         await moderation.delete_ban_message(user_id, callback.bot)
     else:
@@ -119,6 +119,7 @@ async def kick_user_handler(callback: types.CallbackQuery) -> None:
             user_id=user_id
         )
         await callback.answer("✅ Пользователь выгнан")
+        await callback.bot.send_message(chat_id=callback.message.chat.id, text=f"❗ Пользователь <a href='tg://user?id={user_id}'>{user_id}</a> был выгнан админом <a href='tg://user?id={callback.from_user.id}'>{callback.from_user.full_name}</a>")
         await callback.message.edit_text(
             callback.message.text + "\n\n🔴 Выгнан администратором"
         )

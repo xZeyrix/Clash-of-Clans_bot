@@ -1,9 +1,15 @@
 import asyncio
 import html
 from config import CHAT_ID
+from config import ADMIN_IDS
 
 async def admin_moderation_handler(message):
     if not message.reply_to_message:
+        response = await message.answer("❗ Чтобы использовать эту команду, вы должны ответить на сообщение пользователя, против которого собираетесь принять меры.\n\nДоступные команды: !unban | !kick\nПример использования: !unmute [причина]")
+        await asyncio.sleep(7)
+        await response.delete()
+        return
+    elif not message.reply_to_message:
         response = await message.answer("❗ Чтобы использовать эту команду, вы должны ответить на сообщение пользователя, против которого собираетесь принять меры.\n\nДоступные команды: !unban | !kick\nПример использования: !unmute [причина]")
         await asyncio.sleep(7)
         await response.delete()

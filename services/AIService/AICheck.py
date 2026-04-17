@@ -70,7 +70,11 @@ async def AICheckMessage(message):
             moderation = moderation_module.moderation
             if moderation is not None:
                 await apply_moderation_result(message, moderation, ai_result)
-            return None
+
+            if ai_result["class"] == "safe":
+                return True
+            else:
+                return False
 
         if action == "to_asuna":
             response = await message.answer("💫 <b>Асуна</b>:\n\nПечатаю...")
@@ -124,15 +128,16 @@ async def AICheckMessage(message):
                 output = await asuna(text, prompt, llama70b, history)
                 output = json.loads(output)
                 users = output["users"]
+                secondParam = output["action"]
                 if message.from_user.id in config.ADMIN_IDS or param == "list" or param == "info":
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output["text"])
-                    if param == "add":
+                    if param == "add" and secondParam == "add":
                         smertnikiAdd(users)
                         await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> добавляет в список смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
-                    elif param == "remove":
+                    elif param == "remove" and secondParam == "add":
                         smertnikiRemove(users)
                         await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> удаляет из списка смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
-                    elif param == "clear":
+                    elif param == "clear" and secondParam == "clear":
                         smertnikiClear()
                         await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> очищает список смертников по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                 else:
@@ -154,7 +159,7 @@ async def AICheckMessage(message):
                 config.ASUNA_HISTORY[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output}]
             else:
                 config.ASUNA_HISTORY[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output["text"]}]
-        return False
+        return True
 
     except Exception as e:
         print(f"🔴 Unexpected error occured during the AICheck: {e}")
