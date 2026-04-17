@@ -19,7 +19,7 @@ async def admin_moderation_handler(message):
     user_id = message.reply_to_message.from_user.id
     if parts[0] == "!unban":
         try:
-            from utils.moderation import moderation
+            from utils.moderation.moderation import moderation
             moderation.unban_user(user_id)
             response = await message.answer("✅ Успешно!\nПользователь вновь получил право слова")
             await message.bot.send_message(CHAT_ID, f"❗Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> предоставил пользователю <a href='tg://user?id={user_id}'>{html.escape(message.reply_to_message.from_user.full_name)}</a> право слова.\nПричина: {reason}")

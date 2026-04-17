@@ -73,7 +73,7 @@ async def router(message, prompt, model, history=[]):
         print(f"🔴 AIRouter unexpected error: {e}")
         return False
 
-async def asuna(message, prompt, model, history=[]):
+async def asuna(message, prompt, model, history=[], temperature=0.9):
     try:
         system = [
             {
@@ -93,7 +93,7 @@ async def asuna(message, prompt, model, history=[]):
             # model="openai/gpt-oss-120b",
             model=model,
             messages=messages,
-            temperature=0.9,
+            temperature=temperature,
             top_p=0.95,
             max_tokens=500
         )

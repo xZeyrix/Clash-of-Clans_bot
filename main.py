@@ -20,10 +20,10 @@ from handlers.betatesters import  router as dev_router
 
 from utils.filters import DevIdCheckMiddleware, AllowedUsersMiddleware
 from utils.files import load_bot_state, load_smertniki, save_bot_state
-from utils.moderation import ModerationSystem
-from utils.antispam import AntiSpamMiddleware
-from utils.antimat import AntiMatMiddleware
-from utils import moderation as moderation_module
+from utils.moderation.moderation import ModerationSystem
+from utils.moderation.antispam import AntiSpamMiddleware
+from utils.moderation.antimat import AntiMatMiddleware
+from utils.moderation import moderation as moderation_module
 
 from services.coc.coc_api import login_coc
 from services.coc.monitor import stop_war_monitor

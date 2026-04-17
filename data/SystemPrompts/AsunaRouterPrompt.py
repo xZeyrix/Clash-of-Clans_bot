@@ -31,7 +31,8 @@ ROUTING (priority top→down)
 	- clan members list/count
 	- raids info: "когда дни рейдов?", "когда рейд начнется?"
 	- clan info (tag/link/name/etc.)
-	- strategies or base layouts for a TH level (ТХ/TH/ратуша).
+	- strategies ("миксы", "миксики", "армии", "стратегии").
+    - layouts ("базы", "расстановки", "планировки").
 
 4) member
 - About a specific person/group by nickname: "кто такой X", "знаешь X?", "что с X?", "что думаешь об X", "как считаешь X плохой или хороший".
@@ -44,10 +45,7 @@ ROUTING (priority top→down)
 PARAM VALUES
 
 coc_mode (when route="coc")
-- One of: "clan_members" | "current_war" | "raids" | "clan_info" | "strategies_{th}" | "layouts_{th}".
-- If strategies/layouts are requested:
-	- th = the TH number mentioned in the message (e.g. 13/16/17/18)
-	- if no TH number -> use "strategies_null" or "layouts_null".
+- One of: "clan_members" | "current_war" | "raids" | "clan_info" | "strategies" | "layouts".
 
 rules_part (when route="rules")
 - One of: "short" | "main" | "cw" | "cwl" | "events" | "raids" | "kicks" | "roles" | "info".

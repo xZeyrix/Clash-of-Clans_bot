@@ -11,7 +11,7 @@ from services.coc.clan import get_clan_info
 from services.coc.war import get_war_info
 from services.AIService.groqapi import voice_to_text
 from commands.adminModeration import admin_moderation_handler
-from services.AIService.AICheck import AICheckMessage
+from services.AIService.AISystem import AICheckMessage
 
 router = Router()
 if not config.DEV_MODE:

@@ -8,8 +8,8 @@ from data.SystemPrompts.aiRulesPrompt import prompt as rulesPrompt
 from data.SystemPrompts.aiSmertnikiPrompt import prompt as smertnikiPrompt
 from services.AIService.AsunaJailbreakPhrases import randomReplica
 from data.texts import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
-from utils.antimat import regex_fallback_moderation, apply_moderation_result
-from utils import moderation as moderation_module
+from utils.moderation.antimat import regex_fallback_moderation, apply_moderation_result
+from utils.moderation import moderation as moderation_module
 import config
 import json
 import html
@@ -17,6 +17,7 @@ from data.people import people
 from commands.smertniki import smertnikiAdd, smertnikiRemove, smertnikiClear
 from data.texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES, RULES_INFO
 from utils.cocCommands import get_clan_info, get_clan_members, get_war_status, get_cwl_prep_members, get_cwl_status, get_raids
+from utils.youtubeApi import search_videos
 
 async def AICheckMessage(message):
     try:
@@ -90,19 +91,35 @@ async def AICheckMessage(message):
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "coc":
                 param = asunaClassify.get("coc_mode")
-                if param.startswith("strategies_") or param.startswith("layouts_"):
-                    prompt = cocPrompt + "Не нашлось подходящих стратегий/расстановок. Ответь, что ты в этом не разбираешься."
+                if param == "strategies" or param == "layouts":
+                    option = {
+                        "strategies": lambda: search_videos('strategy'),
+                        'layouts': lambda: search_videos('layout')
+                    }
+                    result = await option[param]()
+                    titles = [x["title"] for x in result]
+                    youtubeLinks = "\n".join(
+                        f"{i}) <a href='{x['url']}'>Ссылка на ролик</a>"
+                        for i, x in enumerate(result, 1)
+                    )
+                    prompt = cocPrompt + f"Ссылок нет. НО ты должна ответить пользователю, что ты нашла для него видео и стратегии, скажи что вот ссылки, НО НИКАКИЕ ССЫЛКИ ЕМУ НЕ ОТПРАВЛЯЙ. Просто на русском языке перескажи ВКРАТЦЕ содержимое {titles}, например, если там 3 огромных описания, несколькими русскими словами возьми все это в совокупности и не нарушая нормы/грамматику ответь пользователю вкратце по порядку, каждое прономеруй (1-3). НЕ ПРЕДЛАГАЙ пользователю следующий шаг, т.е. никогда не говори по типу 'могу рассказать побольше о них если хочешь'. Конец твоего сообщения ДОЛЖЕН заканчиваться на знак ':', например 'вот ссылки:'. Подсказки: никогда не говори 'урвоень города', TH на русском будет 'тх', либо 'ратуша', не говори странными фразами, лучше используй англицизмы на русском языке, чем корявый перевод."
+
+                    output = await asuna(text, prompt, llama70b, history)
+                    await response.edit_text("💫 <b>Асуна</b>:\n\n" + output + f"\n{youtubeLinks}\n\n P.S. если захочешь что-то из этого использовать - у каждого ролика в описании есть ссылка на микс/базу")
                 else:
                     cocCommands = {
                         "clan_members": get_clan_members,
                         "current_war": get_war_status,
                         "raids": get_raids,
                         "clan_info": get_clan_info,
+                        "strategies": lambda: search_videos('strategy'),
+                        "layouts": lambda: search_videos('layout')
                     }
                     result = await cocCommands[param]()
                     prompt = cocPrompt + str(result)
-                output = await asuna(text, prompt, llama70b, history)
-                await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
+
+                    output = await asuna(text, prompt, llama70b, history)
+                    await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "rules":
                 param = asunaClassify.get("rules_part")
                 rules = {

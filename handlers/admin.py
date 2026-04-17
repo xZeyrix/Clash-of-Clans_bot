@@ -94,7 +94,7 @@ async def moderation_toggle_handler(message: types.Message) -> None:
 
 @router.callback_query(F.data.startswith("unban_user:"))
 async def unban_user_handler(callback: types.CallbackQuery) -> None:
-    from utils.moderation import moderation  # ← Импортируем общую систему
+    from utils.moderation.moderation import moderation  # ← Импортируем общую систему
     
     user_id = int(callback.data.split(":")[1])
     
@@ -133,7 +133,7 @@ async def keep_ban_handler(callback: types.CallbackQuery) -> None:
 
 @router.callback_query(F.data.startswith("view_message:"))
 async def view_message_handler(callback: types.CallbackQuery) -> None:
-    from utils.antimat import recently_deleted  # ← Импортируем словарь с удалёнными сообщениями
+    from utils.moderation.antimat import recently_deleted  # ← Импортируем словарь с удалёнными сообщениями
 
     user_id = int(callback.data.split(":")[1])
 

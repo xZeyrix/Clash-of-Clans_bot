@@ -189,6 +189,6 @@ async def get_war_status():
         print(f"🔴 Произошла ошибка get_war_status: {e}")
         return "Асуна (ты) не смогла получить данные о войне. Оптимально будет овтетить пользователю, что ты не можешь выполнить его запрос, и пусть лучше введет команду /war."
 
-async def main():
-    print(await get_war_status())
-asyncio.run(main())
+# async def main():
+#     print(await get_war_status())
+# asyncio.run(main())

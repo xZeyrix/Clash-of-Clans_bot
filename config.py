@@ -44,6 +44,9 @@ if DEV_MODE:
 else:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+# Youtube API
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+
 # Пути к файлам
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
