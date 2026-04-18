@@ -3,8 +3,11 @@ import asyncio
 import random
 from typing import Literal
 from config import YOUTUBE_API_KEY
+import config
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
-async def get_video_description(client: httpx.AsyncClient, video_id: str):
+async def get_video_description(client: httpx.AsyncClient, video_id: str, type: Literal['layout', 'strategy']):
     url = "https://www.googleapis.com/youtube/v3/videos"
     params = {
         "part": "snippet",
@@ -20,53 +23,71 @@ async def get_video_description(client: httpx.AsyncClient, video_id: str):
         return None
 
     description = items[0]["snippet"].get("description", "")
-    links = [line.strip() for line in description.splitlines() 
-             if "https://link.clashofclans.com" in line]
+    action = "action=CopyArmy" if type == "strategy" else "action=OpenLayout"
+    links = [line.strip() for line in description.splitlines() if "https://link.clashofclans.com" in line and action in line]
     return links
 
 
-async def search_videos(query: Literal['layout', 'strategy'], max_results=30):
-    url = "https://www.googleapis.com/youtube/v3/search"
-    params = {
-        "part": "snippet",
-        "type": "video",
-        "order": "viewCount",
-        "publishedAfter": "2026-01-01T00:00:00Z",
-        "maxResults": 20 if query == "strategy" else max_results,
-        "key": YOUTUBE_API_KEY
-    }
+async def search_videos(query: Literal['layout', 'strategy'], max_results=50):
+    datePast = (datetime.now() - relativedelta(months=3)).strftime("%Y-%m-%d")
+    date = datetime.now().strftime("%Y-%m-%d")
 
-    if query == "strategy":
-        params["q"] = "Clash of Clans best TH18 strategy OR attack OR troop mix OR army composition"
-    else:  # layout
-        params["q"] = "Clash of Clans best TH18 base OR layout OR war base OR farming base"
+    if config.youtube_layouts["date"] == date and query == 'layout':
+        cycle = min(3, len(config.youtube_layouts["content"]))
+        return random.sample(config.youtube_layouts["content"], cycle) if cycle > 0 else []
+    elif config.youtube_strategies["date"] == date and query == 'strategy':
+        cycle = min(3, len(config.youtube_strategies["content"]))
+        return random.sample(config.youtube_strategies["content"], cycle) if cycle > 0 else []
+    else:
+        url = "https://www.googleapis.com/youtube/v3/search"
+        params = {
+            "part": "snippet",
+            "type": "video",
+            "order": "viewCount",
+            "publishedAfter": f"{datePast}T00:00:00Z",
+            "maxResults": max_results,
+            "key": YOUTUBE_API_KEY
+        }
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.get(url, params=params)
-        resp.raise_for_status()
-        data = resp.json()
+        if query == "strategy":
+            params["q"] = "Clash of Clans best TH18 strategy OR attack OR troop mix OR army composition"
+        else:  # layout
+            params["q"] = "Clash of Clans best TH18 base OR layout OR war base OR farming base"
 
-        videos = []
-        tasks = []
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
 
-        for item in data.get('items', []):
-            video_id = item['id']['videoId']
-            tasks.append(get_video_description(client, video_id))
+            videos = []
+            tasks = []
 
-        # Параллельно получаем описания для всех видео
-        descriptions = await asyncio.gather(*tasks, return_exceptions=True)
+            for item in data.get('items', []):
+                video_id = item['id']['videoId']
+                tasks.append(get_video_description(client, video_id, query))
 
-        for item, links in zip(data.get('items', []), descriptions):
-            if isinstance(links, Exception):
-                links = []
-            title = item['snippet']['title']
-            video = {
-                'title': title,
-                'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}",
-                'links': links
-            }
-            if ("base" in title.lower() or query == 'strategy') and links:
-                videos.append(video)
+            # Параллельно получаем описания для всех видео
+            descriptions = await asyncio.gather(*tasks, return_exceptions=True)
 
-        cycle = min(3, len(videos))
-        return random.sample(videos, cycle) if cycle > 0 else []
+            for item, links in zip(data.get('items', []), descriptions):
+                if isinstance(links, Exception):
+                    links = []
+                title = item['snippet']['title']
+                video = {
+                    'title': title,
+                    'url': f"https://www.youtube.com/watch?v={item['id']['videoId']}",
+                    'links': links
+                }
+                if links:
+                    videos.append(video)
+
+            if query == 'layout':
+                config.youtube_layouts["date"] = date
+                config.youtube_layouts["content"] = videos
+            elif query == 'strategy':
+                config.youtube_strategies["date"] = date
+                config.youtube_strategies["content"] = videos
+
+            cycle = min(3, len(videos))
+            print(len(videos))
+            return random.sample(videos, cycle) if cycle > 0 else []

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Режим разработки (отключать при деплое)
-DEV_MODE = True
+DEV_MODE = False
 
 # Moderation (On/Off)
 MODERATION_ENABLED = True
@@ -49,9 +49,13 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 # Пути к файлам
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.path.join(BASE_DIR, "data/DataJson")
 SMERTNIKI_FILE = os.path.join(DATA_DIR, "smertniki.json")
 STATE_FILE = os.path.join(DATA_DIR, "bot_state.json")
 SMERTNIKI_LOG = os.path.join(DATA_DIR, "smertniki.log")
 SMERTNIKI = list()
 ASUNA_HISTORY = dict()
+
+# Временные данные
+youtube_strategies = {"date": None, "content": None}
+youtube_layouts = {"date": None, "content": None}

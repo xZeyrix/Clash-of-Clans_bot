@@ -63,39 +63,7 @@ async def clan_command_handler(message: types.Message) -> None:
 async def war_command_handler(message: types.Message) -> None:
     await get_war_info(message)
 
-@router.message(F.voice)
-async def voice_message_handler(message: types.Message) -> None:
-    if not message.voice:
-        return
-    
-    duration = message.voice.duration # секунды
-    duration_minutes = duration // 60 # минуты
-    estimated_time = 0.5 + duration * 0.03
-    if duration > 600:
-        await message.answer("❌ Голосовое сообщение слишком длинное (макс 10 минут).")
-        return
 
-    response = await message.answer(
-        f"⏳ Распознаю голосовое ({duration_minutes} мин {duration} сек)...\n"
-        f"⏱️ Это займет около: {estimated_time:.2f} секунд"
-        )
-
-    text, elapsed, BAN, reason = await voice_to_text(message.bot, message.voice.file_id)
-
-    if not text:
-        await response.edit_text("❌ Не удалось распознать речь.")
-        return
-    
-    if BAN:
-        await message.delete()
-        await response.edit_text(f"🚫 Ваше голосовое сообщение содержит недопустимую лексику и было удалено.\nПричина: {reason}")
-        await asyncio.sleep(7)
-        await response.delete()
-        return
-
-    await response.edit_text(
-        f"🔄️ Преобразовано в текст:\n\n{text}\n\n⏱️ Время распознавания: {elapsed:.2f} секунд"
-    )
 
 # ================== ЭТОТ ХЕНДЛЕР ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ ==================
 @router.message()

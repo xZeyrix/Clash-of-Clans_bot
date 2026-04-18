@@ -1,4 +1,4 @@
-from services.AIService.groqapi import router, asuna, promptguard, ai_moderation
+from services.AIService.groqapi import router, asuna, promptguard, ai_moderation, voice_to_text
 from data.SystemPrompts.RouterPrompt import RouterPrompt
 from data.SystemPrompts.AsunaRouterPrompt import AsunaRouterPrompt
 from data.SystemPrompts.aiPrompt import longPrompt as generalPrompt
@@ -28,6 +28,10 @@ async def AICheckMessage(message):
             text = message.text
         elif message.caption:
             text = message.caption
+        elif message.voice:
+            text, decryptedMessage = await voice_to_text(message)
+            if not text:
+                return
         else:
             return False
         
@@ -35,7 +39,7 @@ async def AICheckMessage(message):
         promptInjection = await promptguard(text, 0.7)
         if promptInjection:
             await message.answer("💫 <b>Асуна</b>:\n\n" + randomReplica())
-            return None
+            return
 
         reply = message.reply_to_message
         reply_text = (reply.text or reply.caption or "") if reply else ""
@@ -75,6 +79,11 @@ async def AICheckMessage(message):
             if ai_result["class"] == "safe":
                 return True
             else:
+                try:
+                    if message.voice:
+                        await decryptedMessage.delete()
+                except:
+                    pass
                 return False
 
         if action == "to_asuna":
@@ -102,7 +111,7 @@ async def AICheckMessage(message):
                         f"{i}) <a href='{x['url']}'>Ссылка на ролик</a>"
                         for i, x in enumerate(result, 1)
                     )
-                    prompt = cocPrompt + f"Ссылок нет. НО ты должна ответить пользователю, что ты нашла для него видео и стратегии, скажи что вот ссылки, НО НИКАКИЕ ССЫЛКИ ЕМУ НЕ ОТПРАВЛЯЙ. Просто на русском языке перескажи ВКРАТЦЕ содержимое {titles}, например, если там 3 огромных описания, несколькими русскими словами возьми все это в совокупности и не нарушая нормы/грамматику ответь пользователю вкратце по порядку, каждое прономеруй (1-3). НЕ ПРЕДЛАГАЙ пользователю следующий шаг, т.е. никогда не говори по типу 'могу рассказать побольше о них если хочешь'. Конец твоего сообщения ДОЛЖЕН заканчиваться на знак ':', например 'вот ссылки:'. Подсказки: никогда не говори 'урвоень города', TH на русском будет 'тх', либо 'ратуша', не говори странными фразами, лучше используй англицизмы на русском языке, чем корявый перевод."
+                    prompt = cocPrompt + f"Ссылок нет. НО ты должна ответить пользователю, что ты нашла для него видео и стратегии, скажи что вот ссылки, НО НИКАКИЕ ССЫЛКИ ЕМУ НЕ ОТПРАВЛЯЙ. Просто на русском языке перескажи ВКРАТЦЕ содержимое {titles}, например, если там 3 огромных описания, несколькими русскими словами возьми все это в совокупности и не нарушая нормы/грамматику ответь пользователю вкратце по порядку, каждое прономеруй (1-3). НЕ ПРЕДЛАГАЙ пользователю следующий шаг, т.е. никогда не говори по типу 'могу рассказать побольше о них если хочешь'. Конец твоего сообщения ДОЛЖЕН заканчиваться на знак ':', например 'вот ссылки:'. Подсказки по переводу с английского на русский: th -> тх, thrower -> метатель, dragon duke -> драгон дюк, root riders -> корни, grand warden -> дед, archer queen -> королева, barb king -> король, fireball -> огенный шар, revive -> возрождение, troop launcher -> войскомет, log launcher -> бревномет, siege barracks -> казармы, battle blimp -> дирик, flame flinger -> огнеметатель."
 
                     output = await asuna(text, prompt, llama70b, history)
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output + f"\n{youtubeLinks}\n\n P.S. если захочешь что-то из этого использовать - у каждого ролика в описании есть ссылка на микс/базу")
@@ -179,7 +188,7 @@ async def AICheckMessage(message):
         return True
 
     except Exception as e:
-        print(f"🔴 Unexpected error occured during the AICheck: {e}")
+        print(f"🔴 Unexpected error occured during the AISystem: {e}")
         try:
             text = (message.text or "").lower()
             fallback_result = regex_fallback_moderation(

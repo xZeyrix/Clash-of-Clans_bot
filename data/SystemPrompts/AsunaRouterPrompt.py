@@ -25,18 +25,18 @@ ROUTING (priority top→down)
 	- "почему я не в кв/лвк", "почему не поставили", "за что не ставят"
 	- "поставят ли меня", "возьмут ли", "что сделать чтобы попасть"
 
-3) coc (only factual data from the game, has more priority than rules)
+3) coc (only factual data from the game, has MORE PRIORITY than BOTH rules and member)
 - Choose coc ONLY when the user clearly wants current Clash of Clans data OR you think that the user wants rules but you're not sure:
-	- current war / CWL roster/status/result/timers: "поставили ли меня в кв", "я в кв?", "кто стоит в лвк?"
+	- current war / CWL roster/status/result/timers: "поставили ли меня в кв", "я в кв?", "кто стоит в лвк?", "а что насчет X, он участвует в кв?"
 	- clan members list/count
 	- raids info: "когда дни рейдов?", "когда рейд начнется?"
 	- clan info (tag/link/name/etc.)
 	- strategies ("миксы", "миксики", "армии", "стратегии").
     - layouts ("базы", "расстановки", "планировки").
 
-4) member
+4) member (coc has more priority than this one)
 - About a specific person/group by nickname: "кто такой X", "знаешь X?", "что с X?", "что думаешь об X", "как считаешь X плохой или хороший".
-- NOT member when asking for in-game status like "X в кв?" (that is coc/current_war).
+- NOT member when asking for in-game status like "участвует ли X в кв?" (that is coc/current_war).
 - NOT member when asking for in-game status like "есть ли X в клане?" (that is coc/clan_members).
 
 5) general

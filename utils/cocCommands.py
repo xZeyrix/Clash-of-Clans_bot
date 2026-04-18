@@ -101,15 +101,14 @@ async def get_war_status():
                 def timeDifference(firstTime, secondTime):
                     delta = abs(firstTime - secondTime)
                     h, rem = divmod(int(delta.total_seconds()), 3600)
-                    print(h, rem)
                     m = rem // 60
                     return f"{h:02d} часов и {m:02d} минут" # use h:02d | m:02d to convert to HH.MM
                 
-                if warState == "preparation" and 1==2:
+                if warState == "preparation":
                     return f"Идет день подготовки к войне (кв): наш клан {clanName} против {opponentName}. Подготовка к войне началась {timeDifference(matPrepStartTime, matCurrentTime)} назад, а сражение начнется через {timeDifference(matStartTime, matCurrentTime)}. У обоих кланов участвует в кв по {teamSize} человек, у каждого по {attacksPerMember} атаки. Список участников нашего клана: {basicClanMembers}"
-                elif warState == "inWar" and 1==2:
+                elif warState == "inWar":
                     return f"Идет война (кв): наш клан {clanName} (атаковали {clanAttack}/{teamSize} чел) против {opponentName} (атаковали {opponentAttack}/{teamSize} чел). Мы набрали {clanStars}/{teamSize*3} звезд, а противники {opponentStars}/{teamSize*3}. Война началась {timeDifference(matStartTime, matCurrentTime)} назад, а закончится через {timeDifference(matEndTime, matCurrentTime)}. У обоих кланов участвует в кв по {teamSize} человек, у каждого по {attacksPerMember} атаки. Список участников нашего клана: {clanMembers}"
-                elif warState == "warEnded" or 1==1:
+                elif warState == "warEnded":
                     if clanStars > opponentStars:
                         warResult = "победа"
                     elif clanStars < opponentStars:
@@ -121,6 +120,7 @@ async def get_war_status():
                             warResult = "поражение"
                         else:
                             warResult = "ничья"
+                            
                     return f"Война закончилась (кв): результат - {warResult}. Наш клан {clanName} (атаковали {clanAttack}/{teamSize} чел) сразился с {opponentName} (атаковали {opponentAttack}/{teamSize} чел). Мы набрали {clanStars}/{teamSize*3} звезд, а противники {opponentStars}/{teamSize*3}. Война длилась с {normPrepStartTime} по {normEndTime}, закончилась {timeDifference(matEndTime, matCurrentTime)} назад, новую войну еще не запустили. У обоих кланов участвовало в кв по {teamSize} человек, у каждого было по {attacksPerMember} атаки. Список участников с нашего клана, которые приняли участие в кв: {clanMembers}"
             elif response.status_code == 200:
                 data = response.json()
