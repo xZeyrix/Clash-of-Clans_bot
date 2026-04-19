@@ -1,9 +1,9 @@
 import httpx
 import asyncio
 from datetime import datetime, timezone
-from config import COC_API_TOKEN
+from config.config_holder import config
 
-API_KEY = COC_API_TOKEN
+API_KEY = config.coc_api_key
 tag = "%239G29PC8U"
 basicTag = "#9G29PC8U"
 headers = {"Authorization": f"Bearer {API_KEY}"}
@@ -188,7 +188,3 @@ async def get_war_status():
     except Exception as e:
         print(f"🔴 Произошла ошибка get_war_status: {e}")
         return "Асуна (ты) не смогла получить данные о войне. Оптимально будет овтетить пользователю, что ты не можешь выполнить его запрос, и пусть лучше введет команду /war."
-
-# async def main():
-#     print(await get_war_status())
-# asyncio.run(main())

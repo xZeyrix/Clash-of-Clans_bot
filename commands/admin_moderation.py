@@ -1,7 +1,6 @@
 import asyncio
 import html
-from config import CHAT_ID
-from config import ADMIN_IDS
+from config.config_holder import config
 
 async def admin_moderation_handler(message):
     if not message.reply_to_message:
@@ -22,7 +21,7 @@ async def admin_moderation_handler(message):
             from utils.moderation.moderation import moderation
             moderation.unban_user(user_id)
             response = await message.answer("✅ Успешно!\nПользователь вновь получил право слова")
-            await message.bot.send_message(CHAT_ID, f"❗Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> предоставил пользователю <a href='tg://user?id={user_id}'>{html.escape(message.reply_to_message.from_user.full_name)}</a> право слова.\nПричина: {reason}")
+            await message.bot.send_message(config.chat_id, f"❗Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> предоставил пользователю <a href='tg://user?id={user_id}'>{html.escape(message.reply_to_message.from_user.full_name)}</a> право слова.\nПричина: {reason}")
             await asyncio.sleep(3)
             await response.delete()
             return
@@ -39,7 +38,7 @@ async def admin_moderation_handler(message):
                 user_id=user_id
             )
             response = await message.answer("✅ Успешно!\nПользователь был выгнан из чата")
-            await message.bot.send_message(CHAT_ID, f"❗Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> выгоняет из группы пользователя <a href='tg://user?id={user_id}'>{html.escape(message.reply_to_message.from_user.full_name)}</a>.\nПричина: {reason}")
+            await message.bot.send_message(config.chat_id, f"❗Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> выгоняет из группы пользователя <a href='tg://user?id={user_id}'>{html.escape(message.reply_to_message.from_user.full_name)}</a>.\nПричина: {reason}")
             await asyncio.sleep(3)
             await response.delete()
             return

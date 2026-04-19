@@ -1,15 +1,11 @@
 from groq import AsyncGroq
-from config import GROQ_API_KEY
-from data.SystemPrompts.moderationPrompt import prompt as modPrompt
+from config.config_holder import config
+from data.system_ai_prompts.antitoxic_moderation import prompt as modPrompt
 import json
-import asyncio
 import time
 import io
-from data.texts import BAN_LONG, BAN_WORDS
-import re
-from aiogram import Bot
 
-client = AsyncGroq(api_key=GROQ_API_KEY)
+client = AsyncGroq(api_key=config.groq_api_key)
 
 async def promptguard(message, detect):
     try:

@@ -12,107 +12,102 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-import config
-from config import BOT_TOKEN, DEV_MODE, CHAT_ID
+from config.config_holder import config
+from config.state_holder import state
+
 from handlers.user import router as user_router
 from handlers.admin import router as admin_router
-from handlers.betatesters import  router as dev_router
+from handlers.betatesters import router as beta_router
 
-from utils.filters import DevIdCheckMiddleware, AllowedUsersMiddleware
-from utils.files import load_bot_state, load_smertniki, save_bot_state
+from utils.middlewares import DevIdCheckMiddleware, AllowedUsersMiddleware
+from utils.json_save_and_load import load_bot_state, load_smertniki, save_bot_state
 from utils.moderation.moderation import ModerationSystem
 from utils.moderation.antispam import AntiSpamMiddleware
 from utils.moderation.antimat import AntiMatMiddleware
-from utils.moderation import moderation as moderation_module
 
 from services.coc.coc_api import login_coc
 from services.coc.monitor import stop_war_monitor
+from services.coc.coc_api import close_coc
 
-from data.texts import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
+from data.toxic_words_list import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
 
 dp = Dispatcher()
 shutdown_event = asyncio.Event()
 
-# Мидлвари
-if DEV_MODE:
-    dp.message.middleware(DevIdCheckMiddleware())
-else:
-    dp.message.middleware(AllowedUsersMiddleware())
+# Middleware based on current mode
+dp.message.middleware(DevIdCheckMiddleware()) if config.dev_mode else dp.message.middleware(AllowedUsersMiddleware())
+dp.edited_message.middleware(DevIdCheckMiddleware()) if config.dev_mode else dp.edited_message.middleware(AllowedUsersMiddleware())
+dp.callback_query.middleware(DevIdCheckMiddleware()) if config.dev_mode else dp.callback_query.middleware(AllowedUsersMiddleware())
 
-# Система модерации
 moderation = ModerationSystem(ban_time=86400)
-moderation_module.moderation = moderation
+state.moderation = moderation
 
-# Подключаем мидлвари
 antispam = AntiSpamMiddleware(moderation, rate_limit=10, time_window=60)
 antimat = AntiMatMiddleware(moderation, bad_words=BAN_WORDS, long_bad_words=BAN_LONG, words_light=BAN_LIGHT, words_triggers=BAN_TRIGGERS)
 
-# Проверяем на маты, потом на спам
 dp.message.middleware(antispam)
 dp.message.middleware(antimat)
 dp.edited_message.middleware(antimat)
 
 async def main() -> None:
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        stream=sys.stdout
+    )
+    bot = Bot(token=config.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
-    # Регистрация роутеров
     dp.include_router(admin_router)
-    dp.include_router(dev_router)
+    dp.include_router(beta_router)
     dp.include_router(user_router)
 
-    # Загрузка состояния бота и смертников
     await load_bot_state(bot)
     load_smertniki()
 
-    # Авторизация COC API
+    # To ignore all the messages while the bot was off
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    # COC API Auth
     await login_coc()
 
-    # Настройка обработчиков сигналов
+    # Signals (for fallback)
     loop = asyncio.get_running_loop()
     setup_signal_handlers(loop, dp)
 
-    # Запуск поллинга (теперь ждём его завершения)
     try:
         await dp.start_polling(bot)
     finally:
         await shutdown(dp, bot)
 
 async def shutdown(dp, bot):
-    print("🛑 Получен сигнал завершения, останавливаем бот...")
+    logging.info("The signal received. Stopping the bot...")
     
-    config.bot_paused = True
-    save_bot_state()
-    
-    # Останавливаем мониторинг войны
+    # Stop COC war monitor
     stop_war_monitor()
     
     # Отправляем уведомление
     try:
         await asyncio.wait_for(
-            bot.send_message(CHAT_ID, "⏸️ Бот приостановлен."),
+            bot.send_message(config.chat_id, "❗ Бот уходит на техобслуживание."),
             timeout=5.0
         )
     except (asyncio.TimeoutError, Exception) as e:
-        print(f"⚠️ Не удалось отправить уведомление: {e}")
+        logging.error(f"An error occured while sending a message that the bot was stopped: {e}")
     
-    # Закрываем COC клиент
-    from services.coc.coc_api import close_coc
+    # COC client close
     await close_coc()
     
-    # Закрываем бота
+    # Closing the bot & storage
     await bot.session.close()
     if dp.storage:
         await dp.storage.close()
     
-    print("✅ Бот остановлен корректно")
+    logging.info("The bot was succefully stopped.")
 
 
 def setup_signal_handlers(loop, dp):
-    """Настройка обработчиков сигналов (кросс-платформенно)"""
     def signal_handler(sig, frame):
-        print(f"\n🛑 Получен сигнал {sig}, инициируем остановку...")
-        # Останавливаем polling изящно
+        logging.info(f"\nThe signal received: {sig}, trying to stop the bot...")
         loop.call_soon_threadsafe(lambda: asyncio.create_task(dp.stop_polling()))
     
     signal.signal(signal.SIGINT, signal_handler)
@@ -125,13 +120,13 @@ if __name__ == "__main__":
     while restart_count < max_restarts:
         try:
             asyncio.run(main())
-            break  # Нормальный выход
+            break
         except KeyboardInterrupt:
-            print("Выход по Ctrl+C")
+            logging.info("Exit is in progress because Ctrl+C.")
             break
         except Exception:
             restart_count += 1
-            logging.exception(f"💥 Bot crashed (попытка {restart_count}/{max_restarts})")
+            logging.exception(f"The bot crashed (retry {restart_count}/{max_restarts})")
             if restart_count < max_restarts:
-                print("⏳ Перезапуск через 15 секунд...")
+                logging.info("Reboot in 15 seconds...")
                 time.sleep(15)

@@ -1,10 +1,10 @@
 import coc
 from services.coc import coc_api
 from datetime import datetime, timezone, timedelta
-from config import CLAN_TAG, CHAT_ID, ADMIN_IDS
-import config
+from config.config_holder import config
+from config.state_holder import state
 from aiogram import Bot
-from utils.files import save_smertniki
+from utils.json_save_and_load import save_smertniki
 
 war_previous_state = None
 war_last_data = None
@@ -38,7 +38,7 @@ async def check_war_status(bot: Bot):
     global war_previous_state, war_last_data
 
     try:
-        war = await coc_api.coc_client.get_current_war(CLAN_TAG)
+        war = await coc_api.coc_client.get_current_war(config.clan_tag)
 
         if war.state == 'notInWar':
             if war_previous_state == 'InWar':
@@ -68,7 +68,7 @@ async def check_war_status(bot: Bot):
                 f"👥 Война: {war.team_size} на {war.team_size}\n"
                 f"🕐 До начала дня сражения: {int(hours_remaining-24)}ч {int(minutes_remaining)}мин"
             )
-            await bot.send_message(CHAT_ID, message)
+            await bot.send_message(config.chat_id, message)
             war_notifications_sent['preparation_started'] = True
             print(f"✅ Отправлено уведомление о начале подготовки к войне - {datetime.now(timezone(timedelta(hours=5))).isoformat()} РК")
 
@@ -81,7 +81,7 @@ async def check_war_status(bot: Bot):
                     f"💥 Разрушения: {war.clan.destruction:.1f}% : {war.opponent.destruction:.1f}%\n"
                     f"🕐 До окончания: {int(hours_remaining)}ч {int(minutes_remaining)}мин"
                 )
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 war_notifications_sent['war_started'] = True
                 print("✅ Отправлено уведомление о начале войны")
             
@@ -99,7 +99,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 war_notifications_sent['hours_12'] = True
                 print("✅ Отправлено уведомление: осталось 12 часов")
             
@@ -116,7 +116,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 war_notifications_sent['hours_6'] = True
                 print("✅ Отправлено уведомление: осталось 6 часов")
             
@@ -133,7 +133,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 war_notifications_sent['hours_3'] = True
                 print("✅ Отправлено уведомление: осталось 3 часа")
             
@@ -150,7 +150,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 war_notifications_sent['hours_1'] = True
                 print("✅ Отправлено уведомление: последний час")
             
@@ -190,12 +190,12 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 for name in members_no_attacks:
-                    if name not in config.SMERTNIKI:
-                        config.SMERTNIKI.append(name)
+                    if name not in state.smertniki:
+                        state.smertniki.append(name)
                     else:
-                        for admin_id in ADMIN_IDS:
+                        for admin_id in config.admin_ids:
                             await bot.send_message(admin_id, f"⚠️ {name} уже 2 раза подряд пропустил атаки в войне!")
                 save_smertniki()
                 war_notifications_sent['war_almost_ended'] = True

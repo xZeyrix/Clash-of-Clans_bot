@@ -1,10 +1,10 @@
 import coc
 from services.coc import coc_api
 from datetime import datetime, timezone, timedelta
-from config import CLAN_TAG, CHAT_ID, ADMIN_IDS
-import config
+from config.config_holder import config
+from config.state_holder import state
 from aiogram import Bot
-from utils.files import save_smertniki
+from utils.json_save_and_load import save_smertniki
 
 # Состояния для отслеживания CWL
 cwl_previous_state = None
@@ -42,7 +42,7 @@ async def check_war_status(bot: Bot):
 
     try:
         # Получаем информацию о лиге войн
-        league_group = await coc_api.coc_client.get_league_group(CLAN_TAG)
+        league_group = await coc_api.coc_client.get_league_group(config.clan_tag)
         
         # Проверяем состояние лиги
         current_state = league_group.state
@@ -65,7 +65,7 @@ async def check_war_status(bot: Bot):
                     f"📅 Сезон: {league_group.season}\n"
                     f"⚔️ Впереди 7 дней сражений!\n\n"
                 )
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 cwl_preparation_notified = True
                 print(f"✅ Отправлено уведомление о начале CWL - {datetime.now(timezone(timedelta(hours=5))).isoformat()} РК")
             
@@ -75,7 +75,7 @@ async def check_war_status(bot: Bot):
         # Состояние "inWar" - идут войны
         elif current_state == 'inWar':
             # Получаем текущую войну
-            current_war = await coc_api.coc_client.get_current_war(CLAN_TAG, cwl_league=True)
+            current_war = await coc_api.coc_client.get_current_war(config.clan_tag, cwl_league=True)
             
             # Проверяем, что это действительно война CWL
             if not current_war or current_war.is_cwl is False:
@@ -84,7 +84,7 @@ async def check_war_status(bot: Bot):
             war_tag = current_war.tag if hasattr(current_war, 'tag') else str(current_war.preparation_start_time.time.timestamp())
             
             # Определяем день войны (1-7)
-            war_day = await get_war_day_number(league_group.get_wars_for_clan(CLAN_TAG))
+            war_day = await get_war_day_number(league_group.get_wars_for_clan(config.clan_tag))
 
             if war_day is None:
                 war_day = "?"
@@ -111,7 +111,7 @@ async def check_war_status(bot: Bot):
                     f"💥 Разрушения: {current_war.clan.destruction:.1f}% : {current_war.opponent.destruction:.1f}%\n\n"
                     f"🕐 До окончания: {int(hours_remaining)}ч {int(minutes_remaining)}мин"
                 )
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 notifications['war_started'] = True
                 print(f"✅ Отправлено уведомление о начале дня {war_day} CWL")
             
@@ -130,7 +130,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 notifications['hours_12'] = True
                 print(f"✅ Отправлено уведомление: День {war_day}, осталось 12 часов")
             
@@ -148,7 +148,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 notifications['hours_6'] = True
                 print(f"✅ Отправлено уведомление: День {war_day}, осталось 6 часов")
             
@@ -166,7 +166,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 notifications['hours_3'] = True
                 print(f"✅ Отправлено уведомление: День {war_day}, осталось 3 часа")
             
@@ -184,7 +184,7 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 notifications['hours_1'] = True
                 print(f"✅ Отправлено уведомление: День {war_day}, последний час")
             
@@ -224,14 +224,14 @@ async def check_war_status(bot: Bot):
                     message += "\n".join([f"• {name}" for name in members_no_attacks[:15]])
                     if len(members_no_attacks) > 15:
                         message += f"\n... и ещё {len(members_no_attacks) - 15}"
-                await bot.send_message(CHAT_ID, message)
+                await bot.send_message(config.chat_id, message)
                 
                 # Добавляем не атаковавших в список смертников
                 for name in members_no_attacks:
                     if name not in config.SMERTNIKI:
-                        config.SMERTNIKI.append(name)
+                        state.smertniki.append(name)
                     else:
-                        for admin_id in ADMIN_IDS:
+                        for admin_id in config.admin_ids:
                             await bot.send_message(admin_id, f"⚠️ {name} уже 2 раза подряд пропустил атаки в CWL!")
                 save_smertniki()
                 
@@ -248,7 +248,7 @@ async def check_war_status(bot: Bot):
                     # Находим наш клан в группе
                     our_clan = None
                     for clan in league_group.clans:
-                        if clan.tag == CLAN_TAG:
+                        if clan.tag == config.clan_tag:
                             our_clan = clan
                             break
                     
@@ -265,13 +265,13 @@ async def check_war_status(bot: Bot):
                     #     message = f"🏆 <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\nСпасибо всем за участие! 💪"
                     
                     message = f"❗ <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\nНа данный момент бот не способен самостоятельно подводить итоги\nПоэтому админы, пожалуйста, отправьте боту через команду /send скриншот результатов"
-                    await bot.send_message(CHAT_ID, message)
+                    await bot.send_message(config.chat_id, message)
                     cwl_ended_notified = True
                     print("✅ Отправлено уведомление об окончании CWL")
                 except Exception as e:
                     # Если не удалось получить детальную информацию, отправляем простое сообщение
                     message = f"🏆 <b>ЛИГА ВОЙН КЛАНОВ ЗАВЕРШЕНА!</b>\n\nСпасибо всем за участие! 💪"
-                    await bot.send_message(CHAT_ID, message)
+                    await bot.send_message(config.chat_id, message)
                     cwl_ended_notified = True
                     print(f"✅ Отправлено уведомление об окончании CWL (упрощённое): {e}")
             

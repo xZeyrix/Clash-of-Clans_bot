@@ -70,7 +70,3 @@ class ModerationSystem:
     def get_warnings_count(self, user_id: int) -> int:
         """Возвращает количество предупреждений"""
         return len(self.user_warnings[user_id])
-
-
-# Глобальный экземпляр
-moderation = None

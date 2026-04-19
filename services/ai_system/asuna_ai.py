@@ -1,27 +1,28 @@
-from services.AIService.groqapi import router, asuna, promptguard, ai_moderation, voice_to_text
-from data.SystemPrompts.RouterPrompt import RouterPrompt
-from data.SystemPrompts.AsunaRouterPrompt import AsunaRouterPrompt
-from data.SystemPrompts.aiPrompt import longPrompt as generalPrompt
-from data.SystemPrompts.aiCocPrompt import prompt as cocPrompt
-from data.SystemPrompts.aiMemberPrompt import prompt as memberPrompt
-from data.SystemPrompts.aiRulesPrompt import prompt as rulesPrompt
-from data.SystemPrompts.aiSmertnikiPrompt import prompt as smertnikiPrompt
-from services.AIService.AsunaJailbreakPhrases import randomReplica
-from data.texts import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
+from services.ai_system.groqapi_functions import router, asuna, promptguard, ai_moderation, voice_to_text
+from data.system_ai_prompts.main_router import RouterPrompt as router_prompt
+from data.system_ai_prompts.asuna_router import AsunaRouterPrompt as asuna_router_prompt
+from data.system_ai_prompts.asuna_general import longPrompt as general_prompt
+from data.system_ai_prompts.asuna_coc import prompt as coc_prompt
+from data.system_ai_prompts.asuna_member import prompt as member_prompt
+from data.system_ai_prompts.asuna_rules import prompt as rules_prompt
+from data.system_ai_prompts.asuna_smertniki import prompt as smertniki_prompt
+from services.ai_system.asuna_jailbreak_phrases import randomReplica
+from data.toxic_words_list import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
 from utils.moderation.antimat import regex_fallback_moderation, apply_moderation_result
-from utils.moderation import moderation as moderation_module
-import config
+from config.state_holder import state
+from config.config_holder import config
+from config.state_holder import state
 import json
 import html
-from data.people import people
+from data.members_info import people
 from commands.smertniki import smertnikiAdd, smertnikiRemove, smertnikiClear
-from data.texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES, RULES_INFO
-from utils.cocCommands import get_clan_info, get_clan_members, get_war_status, get_cwl_prep_members, get_cwl_status, get_raids
-from utils.youtubeApi import search_videos
+from data.rules_texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES, RULES_INFO
+from utils.cocapi_get_info import get_clan_info, get_clan_members, get_war_status, get_cwl_prep_members, get_cwl_status, get_raids
+from utils.youtube_api import search_videos
 
 async def AICheckMessage(message):
     try:
-        if message.chat.id != config.TALK_CHAT_ID and message.chat.id != config.ADMIN_IDS[0]:
+        if message.chat.id != config.talk_chat_id and message.chat.id != config.admin_ids[0]:
             return False
 
         if message.text:
@@ -58,11 +59,11 @@ async def AICheckMessage(message):
         if is_reply_to_asuna:
             action = "to_asuna"
             try:
-                history = config.ASUNA_HISTORY[message.from_user.id]
+                history = state.asuna_history[message.from_user.id]
             except:
                 history = list()
         else:
-            startRouter = await router(text, RouterPrompt, "llama-3.1-8b-instant", history)
+            startRouter = await router(text, router_prompt, "llama-3.1-8b-instant", history)
             if not startRouter:
                 return False
             action = startRouter.get("action")
@@ -72,9 +73,8 @@ async def AICheckMessage(message):
             if ai_result is None:
                 raise RuntimeError("Safeguard moderation returned None")
 
-            moderation = moderation_module.moderation
-            if moderation is not None:
-                await apply_moderation_result(message, moderation, ai_result)
+            if state.moderation is not None:
+                await apply_moderation_result(message, state.moderation, ai_result)
 
             if ai_result["class"] == "safe":
                 return True
@@ -91,12 +91,12 @@ async def AICheckMessage(message):
             gptoss120b = "openai/gpt-oss-120b"
             llama70b = "llama-3.3-70b-versatile"
             
-            asunaClassifyPrompt = AsunaRouterPrompt + str(people.keys())
+            asunaClassifyPrompt = asuna_router_prompt + str(people.keys())
             asunaClassify = await router(text, asunaClassifyPrompt, "openai/gpt-oss-20b", history)
             route = asunaClassify.get("route")
 
             if route == "general":
-                output = await asuna(text, generalPrompt, gptoss120b, history)
+                output = await asuna(text, general_prompt, gptoss120b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "coc":
                 param = asunaClassify.get("coc_mode")
@@ -111,7 +111,7 @@ async def AICheckMessage(message):
                         f"{i}) <a href='{x['url']}'>Ссылка на ролик</a>"
                         for i, x in enumerate(result, 1)
                     )
-                    prompt = cocPrompt + f"Ссылок нет. НО ты должна ответить пользователю, что ты нашла для него видео и стратегии, скажи что вот ссылки, НО НИКАКИЕ ССЫЛКИ ЕМУ НЕ ОТПРАВЛЯЙ. Просто на русском языке перескажи ВКРАТЦЕ содержимое {titles}, например, если там 3 огромных описания, несколькими русскими словами возьми все это в совокупности и не нарушая нормы/грамматику ответь пользователю вкратце по порядку, каждое прономеруй (1-3). НЕ ПРЕДЛАГАЙ пользователю следующий шаг, т.е. никогда не говори по типу 'могу рассказать побольше о них если хочешь'. Конец твоего сообщения ДОЛЖЕН заканчиваться на знак ':', например 'вот ссылки:'. Подсказки по переводу с английского на русский: th -> тх, thrower -> метатель, dragon duke -> драгон дюк, root riders -> корни, grand warden -> дед, archer queen -> королева, barb king -> король, fireball -> огенный шар, revive -> возрождение, troop launcher -> войскомет, log launcher -> бревномет, siege barracks -> казармы, battle blimp -> дирик, flame flinger -> огнеметатель."
+                    prompt = coc_prompt + f"Ссылок нет. НО ты должна ответить пользователю, что ты нашла для него видео и стратегии, скажи что вот ссылки, НО НИКАКИЕ ССЫЛКИ ЕМУ НЕ ОТПРАВЛЯЙ. Просто на русском языке перескажи ВКРАТЦЕ содержимое {titles}, например, если там 3 огромных описания, несколькими русскими словами возьми все это в совокупности и не нарушая нормы/грамматику ответь пользователю вкратце по порядку, каждое ПРОНУМЕРУЙ (1-3). НЕ ПРЕДЛАГАЙ пользователю следующий шаг, т.е. никогда не говори по типу 'могу рассказать побольше о них если хочешь'. Конец твоего сообщения ДОЛЖЕН заканчиваться на знак ':', например 'вот ссылки:'. Подсказки по переводу с английского на русский: th -> тх, thrower -> метатель, dragon duke -> драгон дюк, root riders -> корни, grand warden -> дед, archer queen -> королева, barb king -> король, fireball -> огенный шар, revive -> возрождение, troop launcher -> войскомет, log launcher -> бревномет, siege barracks -> казармы, battle blimp -> дирик, flame flinger -> огнеметатель."
 
                     output = await asuna(text, prompt, llama70b, history)
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output + f"\n{youtubeLinks}\n\n P.S. если захочешь что-то из этого использовать - у каждого ролика в описании есть ссылка на микс/базу")
@@ -125,7 +125,7 @@ async def AICheckMessage(message):
                         "layouts": lambda: search_videos('layout')
                     }
                     result = await cocCommands[param]()
-                    prompt = cocPrompt + str(result)
+                    prompt = coc_prompt + str(result)
 
                     output = await asuna(text, prompt, llama70b, history)
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
@@ -143,37 +143,37 @@ async def AICheckMessage(message):
                     "info": RULES_INFO
                 }
                 rule = rules[param]
-                prompt = rulesPrompt + rule
+                prompt = rules_prompt + rule
 
                 output = await asuna(text, prompt, llama70b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
             elif route == "smertniki":
                 param = asunaClassify.get("smertniki_action")
-                prompt = smertnikiPrompt + (str(config.SMERTNIKI) if config.SMERTNIKI else "Список смертников пуст")
+                prompt = smertniki_prompt + (str(state.smertniki) if state.smertniki else "Список смертников пуст")
 
                 output = await asuna(text, prompt, llama70b, history)
                 output = json.loads(output)
                 users = output["users"]
                 secondParam = output["action"]
-                if message.from_user.id in config.ADMIN_IDS or param == "list" or param == "info":
+                if message.from_user.id in config.admin_ids or param == "list" or param == "info":
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output["text"])
                     if param == "add" and secondParam == "add":
                         smertnikiAdd(users)
-                        await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> добавляет в список смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
+                        await message.bot.send_message(config.chat_id, f"✅ <b>Асуна</b> добавляет в список смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                     elif param == "remove" and secondParam == "add":
                         smertnikiRemove(users)
-                        await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> удаляет из списка смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
+                        await message.bot.send_message(config.chat_id, f"✅ <b>Асуна</b> удаляет из списка смертников игрока/игроков: {html.escape(users)} по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                     elif param == "clear" and secondParam == "clear":
                         smertnikiClear()
-                        await message.bot.send_message(config.CHAT_ID, f"✅ <b>Асуна</b> очищает список смертников по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
+                        await message.bot.send_message(config.chat_id, f"✅ <b>Асуна</b> очищает список смертников по воле админа <b>{html.escape(message.from_user.full_name)}</b>")
                 else:
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Нетушки. Я что-то не вижу в тебе админа, так что отказано")
             elif route == "member":
                 param = asunaClassify.get("member_name")
                 try:
-                    prompt = memberPrompt + people[param]
+                    prompt = member_prompt + people[param]
                 except:
-                    prompt = memberPrompt + "Данные отсутствуют."
+                    prompt = member_prompt + "Данные отсутствуют."
 
                 output = await asuna(text, prompt, llama70b, history)
                 await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
@@ -182,9 +182,9 @@ async def AICheckMessage(message):
                 print(route)
 
             if route != "smertniki":
-                config.ASUNA_HISTORY[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output}]
+                state.asuna_history[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output}]
             else:
-                config.ASUNA_HISTORY[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output["text"]}]
+                state.asuna_history[message.from_user.id] = [{"role": "user", "content": text}, {"role": "assistant", "content": output["text"]}]
         return True
 
     except Exception as e:
@@ -198,9 +198,8 @@ async def AICheckMessage(message):
                 words_light=BAN_LIGHT,
                 words_triggers=BAN_TRIGGERS,
             )
-            moderation = moderation_module.moderation
-            if moderation is not None:
-                await apply_moderation_result(message, moderation, fallback_result)
+            if state.moderation is not None:
+                await apply_moderation_result(message, state.moderation, fallback_result)
         except Exception as fallback_error:
             print(f"🔴 Regex fallback failed: {fallback_error}")
         return False

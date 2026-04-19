@@ -1,9 +1,9 @@
-from services.coc.CWmonitor import check_war_status
-from services.coc.CWLmonitor import check_war_status as check_cwl_status
+from services.coc.cw_monitor import check_war_status
+from services.coc.cwl_monitor import check_war_status as check_cwl_status
 import asyncio
 from aiogram import Bot
 from services.coc import coc_api
-from config import CLAN_TAG
+from config.config_holder import config
 
 war_monitor_active = False
 war_monitor_task = None 
@@ -22,11 +22,11 @@ async def war_monitor_loop(bot: Bot):
     while war_monitor_active:
         try:
             try:
-                cwl = await coc_api.coc_client.get_league_group(CLAN_TAG)
+                cwl = await coc_api.coc_client.get_league_group(config.clan_tag)
                 cw = None
             except Exception as e:
                 cwl = None
-                cw = await coc_api.coc_client.get_current_war(CLAN_TAG)
+                cw = await coc_api.coc_client.get_current_war(config.clan_tag)
             if cwl is not None:
                 await check_cwl_status(bot)
             elif cw is not None:

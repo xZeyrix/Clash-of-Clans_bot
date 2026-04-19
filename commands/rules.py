@@ -1,4 +1,4 @@
-from data.texts import RULES_MAIN, RULES_CWL, RULES_CW, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES
+from data.rules_texts import RULES_MAIN, RULES_CWL, RULES_CW, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # Список правил

@@ -1,4 +1,4 @@
-from config import CLAN_TAG
+from config.config_holder import config
 from services.coc import coc_api
 import html
 
@@ -9,7 +9,7 @@ async def get_clan_info(message) -> None:
 
         # Парсим сообщение, чтобы получить тег клана
         parts = message.text.split()
-        clan_tag = parts[1] if len(parts) > 1 else CLAN_TAG
+        clan_tag = parts[1] if len(parts) > 1 else config.clan_tag
 
         # Если тег не начинается с '#', добавляем его
         if not clan_tag.startswith('#'):

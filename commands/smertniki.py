@@ -1,14 +1,15 @@
-from utils.files import save_smertniki
-import config
+from utils.json_save_and_load import save_smertniki
+import config.config as config
 import html
-from config import CHAT_ID
+from config.state_holder import state
+from config.config_holder import config
 
 def smertnikiAdd(names):
     nicknames = [name.strip() for name in names.split(',')]
     output = []
     for nickname in nicknames:
-        if nickname not in config.SMERTNIKI:
-            config.SMERTNIKI.append(nickname)
+        if nickname not in state.smertniki:
+            state.smertniki.append(nickname)
             output.append(nickname)
     save_smertniki()
     if not output:
@@ -20,9 +21,9 @@ def smertnikiRemove(names):
     indexes.sort(reverse=True)
     deleted_users = []
     for index in indexes:
-        if 0 <= index < len(config.SMERTNIKI):
-            user = config.SMERTNIKI[index]
-            del config.SMERTNIKI[index]
+        if 0 <= index < len(state.smertniki):
+            user = state.smertniki[index]
+            del state.smertniki[index]
             deleted_users.append(user)
     save_smertniki()
     if not deleted_users:
@@ -30,7 +31,7 @@ def smertnikiRemove(names):
     else:
         return deleted_users
 def smertnikiClear():
-    config.SMERTNIKI.clear()
+    state.smertniki.clear()
     save_smertniki()
 async def smertniki(message, id=None):
     parts = message.text.split(maxsplit=2)
@@ -47,7 +48,7 @@ async def smertniki(message, id=None):
             await message.answer("❗ Указанные никнеймы уже есть в списке смертников.")
             return
         await message.answer(f"✅ Пользователь/пользователи {html.escape(', '.join(output))} добавлен(ы) в список смертников.")
-        await message.bot.send_message(CHAT_ID, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> добавил пользователя/пользователей <b>{html.escape(', '.join(output))}</b> в список смертников.")
+        await message.bot.send_message(config.chat_id, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> добавил пользователя/пользователей <b>{html.escape(', '.join(output))}</b> в список смертников.")
     elif command == 'rm':
         if len(parts) < 3:
             await message.answer("❌ Укажите ID для удаления.\nПример: /sm rm 1 или /sm rm 1,2,3")
@@ -58,22 +59,22 @@ async def smertniki(message, id=None):
                 await message.answer("❗ Указанные ID не найдены в списке смертников.")
                 return
             await message.answer(f"✅ Пользователь/пользователи {html.escape(', '.join(deleted_users))} удален(ы) из списка смертников.")
-            await message.bot.send_message(CHAT_ID, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> удалил пользователя/пользователей <b>{html.escape(', '.join(deleted_users))}</b> из списка смертников.")
+            await message.bot.send_message(config.chat_id, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> удалил пользователя/пользователей <b>{html.escape(', '.join(deleted_users))}</b> из списка смертников.")
         except ValueError:
             await message.answer("❌ ID должен быть числом.")
     elif command == 'clear':
-        if not config.SMERTNIKI:
+        if not state.smertniki:
             await message.answer("❗ Список смертников уже пуст.")
             return
         smertnikiClear()
         await message.answer("✅ Список смертников очищен.")
-        await message.bot.send_message(CHAT_ID, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> очистил список смертников.")
+        await message.bot.send_message(config.chat_id, f"✅ Админ <a href='tg://user?id={message.from_user.id}'>{html.escape(message.from_user.full_name)}</a> очистил список смертников.")
     elif command == 'list':
-        if not config.SMERTNIKI:
+        if not state.smertniki:
             await message.answer("❗ Список смертников пуст.")
         else:
             response = "📋 Список смертников:\n"
-            for i, nickname in enumerate(config.SMERTNIKI, 1):
+            for i, nickname in enumerate(state.smertniki, 1):
                 response += f"<b>{i}.</b> {html.escape(nickname)}\n"
             await message.answer(response)
     else:

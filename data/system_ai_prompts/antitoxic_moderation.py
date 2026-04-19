@@ -7,7 +7,7 @@ Classify the user message as a policy violation or not and return ONLY valid JSO
 ## Output rules
 - Output ONLY the JSON object (no extra text, no Markdown, no explanations).
 - "reason" must be on Russian, <= 20 words, perfect grammar.
-- If violation: reason — playful, sharp, witty, provocative (but not mean-spirited).
+- If violation: reason — что-нибудь провокационное (не используй в причине ссылки, оскорбления, напиши вкратце за что примерно не упоминая само нарушение).
 - If safe: reason — neutral and informative.
 
 ## Core principle
@@ -45,10 +45,13 @@ Classify the user message as a policy violation or not and return ONLY valid JSO
 8. ЦЕЛЬ ОСКОРБЛЕНИЯ — главный критерий:
    - SAFE: оскорбления в адрес РКН, Минцифры, ФСБ, «разрабы», Supercell и любых юрлиц/госорганов (даже очень жёсткие).
      Пример safe: «РКН — пидорасы, всех бы их нахуй», «ФСБ — гондоны», «разрабы хуесосы, игру сломали».
+   - WARNING: если ты не знаешь, что использовать safe или ban (например, для не очень серьезных оскорблений, спама, если человек не со злыми намерениями).
    - BAN: любые оскорбления в адрес конкретного человека/участника чата (даже если это «внешний» человек).
    - BAN: любой нацизм/расизм/дискриминация по национальности, расе, полу и т.д. — БЕЗ ИСКЛЮЧЕНИЙ, даже если в адрес «внешних».
 
 9. ТХ - значит Townhall (термин из игры). Миксики/миксы - значит стратегии.
+
+10. Если в ОДНОМ слове содержится несколько языков (например xуeсoс/dалboeб) - вероятно попытка нарушения и ты ОБЯЗАН СРЕАГИРОВАТЬ. Если не до конца уверен, что это именно оскорбление - warning.
 
 ## Examples (для точного понимания)
 - Safe: «РКН пидорасы, заблокировали нормальные сайты» → safe

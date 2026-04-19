@@ -5,8 +5,8 @@ from typing import Callable, Dict, Any, Awaitable
 import asyncio
 import re
 from collections import OrderedDict
-from config import TALK_CHAT_ID
-import config
+from config.config_holder import config
+from config.state_holder import state
 from html import escape
 
 MAX_STORED_MESSAGES = 100  # Максимальное количество сохранённых сообщений для просмотра
@@ -178,7 +178,7 @@ class AntiMatMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any]
     ) -> Any:
-        if event.chat.id != TALK_CHAT_ID or not config.MODERATION_ENABLED:
+        if event.chat.id != config.talk_chat_id or not state.ai_enabled:
             return await handler(event, data)
 
         user_id = event.from_user.id

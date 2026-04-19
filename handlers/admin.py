@@ -1,22 +1,22 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from services.coc import monitor
-from utils.filters import AdminCheckMiddleware
-from utils.files import save_bot_state
+from utils.middlewares import AdminCheckMiddleware
+from utils.json_save_and_load import save_bot_state
 from services.coc.monitor import start_war_monitor, stop_war_monitor
-import config
-from config import DEV_MODE
 import html
-from config import CHAT_ID
-from data.texts import ADMIN_TEXT
+from config.config_holder import config
+from config.state_holder import state
+from data.rules_texts import ADMIN_TEXT
 from commands.send import send_message
 import logging
 from commands.smertniki import smertniki
 
 router = Router()
-if not DEV_MODE:
+if not config.dev_mode:
     router.message.middleware(AdminCheckMiddleware())
     router.callback_query.middleware(AdminCheckMiddleware())
+    router.edited_message.middleware(AdminCheckMiddleware())
 
 # -----------------------------------------------
 #              Обработчики команд
@@ -28,7 +28,7 @@ async def admin_command_handler(message: types.Message) -> None:
 
 @router.message(Command("send"))
 async def send_message_handler(message: types.Message) -> None:
-    await send_message(message, CHAT_ID)
+    await send_message(message, config.chat_id)
 
 @router.message(Command("getchatid"))
 async def get_chat_id_handler(message: types.Message) -> None:
@@ -36,15 +36,15 @@ async def get_chat_id_handler(message: types.Message) -> None:
 
 @router.message(Command("pause"))
 async def pause_command_handler(message: types.Message) -> None:
-    config.bot_paused = True
+    state.bot_paused = True
     save_bot_state()
-    await message.bot.send_message(CHAT_ID, "⏹️ Бот приостановлен администраторами. Он не будет отвечать на команды, пока не будет возобновлён.")
+    await message.bot.send_message(config.chat_id, "⏹️ Бот приостановлен администраторами. Он не будет отвечать на команды, пока не будет возобновлён.")
 
 @router.message(Command("resume"))
 async def resume_command_handler(message: types.Message) -> None:
-    config.bot_paused = False
+    state.bot_paused = False
     save_bot_state()
-    await message.bot.send_message(CHAT_ID, "▶️ Бот возобновлён администраторами. Он снова будет отвечать на команды.")
+    await message.bot.send_message(config.chat_id, "▶️ Бот возобновлён администраторами. Он снова будет отвечать на команды.")
 
 @router.message(Command("sm"))
 async def smertniki_command_handler(message: types.Message) -> None:
@@ -82,10 +82,10 @@ async def moderation_toggle_handler(message: types.Message) -> None:
         return
     
     if parts[1].lower() == "on":
-        config.MODERATION_ENABLED = True
+        state.ai_enabled = True
         await message.answer("✅ Модерация включена")
     elif parts[1].lower() == "off":
-        config.MODERATION_ENABLED = False
+        state.ai_enabled = False
         await message.answer("❎ Модерация отключена")
 
 # -----------------------------------------------
@@ -94,18 +94,16 @@ async def moderation_toggle_handler(message: types.Message) -> None:
 
 @router.callback_query(F.data.startswith("unban_user:"))
 async def unban_user_handler(callback: types.CallbackQuery) -> None:
-    from utils.moderation.moderation import moderation  # ← Импортируем общую систему
-    
     user_id = int(callback.data.split(":")[1])
     
     # Разблокируем пользователя
-    success = moderation.unban_user(user_id)
+    success = state.moderation.unban_user(user_id)
     
     if success:
         await callback.answer("✅ Пользователь разблокирован")
         await callback.bot.send_message(chat_id=callback.message.chat.id, text=f"❗ Пользователь <a href='tg://user?id={user_id}'>{user_id}</a> был разблокирован админом <a href='tg://user?id={callback.from_user.id}'>{callback.from_user.full_name}</a>")
         # ← УДАЛЯЕМ СООБЩЕНИЕ С КНОПКАМИ
-        await moderation.delete_ban_message(user_id, callback.bot)
+        await state.moderation.delete_ban_message(user_id, callback.bot)
     else:
         await callback.answer("❌ Пользователь не был заблокирован", show_alert=True)
 

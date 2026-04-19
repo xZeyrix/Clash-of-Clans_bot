@@ -3,19 +3,21 @@ import logging
 from aiogram import Router, types, F
 from aiogram.filters import Command
 import html
-from utils.filters import PauseCheckMiddleware
-from data.texts import help_text, RULES_SHORT
-import config
+from utils.middlewares import PauseCheckMiddleware
+from data.rules_texts import help_text, RULES_SHORT
+from config.config_holder import config
+from config.state_holder import state
 from commands.rules import RULES_LIST, get_navigation_keyboard
 from services.coc.clan import get_clan_info
 from services.coc.war import get_war_info
-from services.AIService.groqapi import voice_to_text
-from commands.adminModeration import admin_moderation_handler
-from services.AIService.AISystem import AICheckMessage
+from services.ai_system.groqapi_functions import voice_to_text
+from commands.admin_moderation import admin_moderation_handler
+from services.ai_system.asuna_ai import AICheckMessage
 
 router = Router()
-if not config.DEV_MODE:
-    router.message.middleware(PauseCheckMiddleware())
+router.message.middleware(PauseCheckMiddleware())
+router.edited_message.middleware(PauseCheckMiddleware())
+router.callback_query.middleware(PauseCheckMiddleware())
 
 @router.message(Command("start"))
 async def start_command_handler(message: types.Message) -> None:
@@ -43,9 +45,9 @@ async def navigate_rules(callback: types.CallbackQuery) -> None:
 
 @router.message(Command("smertniki"))
 async def smertniki_command_handler(message: types.Message) -> None:
-    if config.SMERTNIKI:
+    if state.smertniki:
         response = "📋 Список смертников:\n"
-        for i, nickname in enumerate(config.SMERTNIKI, 1):
+        for i, nickname in enumerate(state.smertniki, 1):
             response += f"<b>{i}.</b> {html.escape(nickname)}\n"
         await message.answer(response)
     else:

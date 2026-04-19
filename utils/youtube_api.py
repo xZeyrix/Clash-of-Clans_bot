@@ -2,8 +2,8 @@ import httpx
 import asyncio
 import random
 from typing import Literal
-from config import YOUTUBE_API_KEY
-import config
+from config.config_holder import config
+from config.state_holder import state
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -12,7 +12,7 @@ async def get_video_description(client: httpx.AsyncClient, video_id: str, type: 
     params = {
         "part": "snippet",
         "id": video_id,
-        "key": YOUTUBE_API_KEY
+        "key": config.youtube_api_key
     }
     resp = await client.get(url, params=params)
     resp.raise_for_status()
@@ -32,12 +32,12 @@ async def search_videos(query: Literal['layout', 'strategy'], max_results=50):
     datePast = (datetime.now() - relativedelta(months=3)).strftime("%Y-%m-%d")
     date = datetime.now().strftime("%Y-%m-%d")
 
-    if config.youtube_layouts["date"] == date and query == 'layout':
-        cycle = min(3, len(config.youtube_layouts["content"]))
-        return random.sample(config.youtube_layouts["content"], cycle) if cycle > 0 else []
-    elif config.youtube_strategies["date"] == date and query == 'strategy':
-        cycle = min(3, len(config.youtube_strategies["content"]))
-        return random.sample(config.youtube_strategies["content"], cycle) if cycle > 0 else []
+    if state.youtube_layouts.date == date and query == 'layout':
+        cycle = min(3, len(state.youtube_layouts.content))
+        return random.sample(state.youtube_layouts.content, cycle) if cycle > 0 else []
+    elif state.youtube_strategies.date == date and query == 'strategy':
+        cycle = min(3, len(state.youtube_strategies.content))
+        return random.sample(state.youtube_strategies.content, cycle) if cycle > 0 else []
     else:
         url = "https://www.googleapis.com/youtube/v3/search"
         params = {
@@ -46,7 +46,7 @@ async def search_videos(query: Literal['layout', 'strategy'], max_results=50):
             "order": "viewCount",
             "publishedAfter": f"{datePast}T00:00:00Z",
             "maxResults": max_results,
-            "key": YOUTUBE_API_KEY
+            "key": config.youtube_api_key
         }
 
         if query == "strategy":
@@ -82,11 +82,11 @@ async def search_videos(query: Literal['layout', 'strategy'], max_results=50):
                     videos.append(video)
 
             if query == 'layout':
-                config.youtube_layouts["date"] = date
-                config.youtube_layouts["content"] = videos
+                state.youtube_layouts.date = date
+                state.youtube_layouts.content = videos
             elif query == 'strategy':
-                config.youtube_strategies["date"] = date
-                config.youtube_strategies["content"] = videos
+                state.youtube_strategies.date = date
+                state.youtube_strategies.content = videos
 
             cycle = min(3, len(videos))
             print(len(videos))

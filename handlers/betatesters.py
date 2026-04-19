@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
-from  config import DEV_ID, BETA_TESTERS_IDS, BETA_BANNED_IDS
-import config
+from config.config_holder import config
+from config.state_holder import state
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import html
 
@@ -29,9 +29,9 @@ async def call_beta(callback: types.CallbackQuery) -> None:
     user_name = callback.data.split(":")[2]
     
     try:
-        await callback.bot.send_message(DEV_ID, f"❗ Пользователь  <a href='tg://user?id={user_id}'>{html.escape(user_name)}</a> хочет получить права на использование бота. Разрешить?", reply_markup=dev_allow_keyboard(user_id))
+        await callback.bot.send_message(config.dev_id, f"❗ Пользователь  <a href='tg://user?id={user_id}'>{html.escape(user_name)}</a> хочет получить права на использование бота. Разрешить?", reply_markup=dev_allow_keyboard(user_id))
         await callback.message.edit_text("✅ Разработчику отправлено уведомление.\nОжидайте подтверждения.\n\n❗ Обработка ваших сообщений была заблокирована до решения разработчика.\nПожалуйста, ничего не отправляйте.")
-        config.BETA_BANNED_IDS.append(user_id)
+        state.beta_banned_ids.append(user_id)
     except Exception as e:
         await callback.answer("❌ Произошла ошибка.\nПопробуйте снова позже.")
 
@@ -45,8 +45,8 @@ async def allow_beta(callback: types.CallbackQuery) -> None:
     user_id = int(callback.data.split(":")[1])
 
     try:
-        config.BETA_TESTERS_IDS.append(user_id)
-        config.BETA_BANNED_IDS.remove(user_id)
+        state.beta_testers_ids.append(user_id)
+        state.beta_banned_ids.remove(user_id)
         await callback.message.delete()
         await callback.bot.send_message(user_id, "✅ Разработчик дал вам разрешение на бета-тест.\nТеперь вы можете отправлять сообщения.")
         await callback.answer("✅ Успешно")
@@ -59,8 +59,8 @@ async def disallow_beta(callback: types.CallbackQuery) -> None:
 
     try:
         if user_id in config.BETA_TESTERS_IDS:
-            config.BETA_BANNED_IDS.append(user_id)
-            config.BETA_TESTERS_IDS.remove(user_id)
+            state.beta_banned_ids.append(user_id)
+            state.beta_testers_ids.remove(user_id)
         await callback.message.delete()
         await callback.answer("✅ Успешно")
         await callback.bot.send_message(user_id, "❌ Разработчик запретил вам использовать бота.\nПожалуйста, не отправляйте сообщения.")
