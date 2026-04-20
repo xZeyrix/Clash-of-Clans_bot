@@ -1,6 +1,6 @@
 import asyncio
 import html
-from config.config_holder import config
+from config import config
 
 async def admin_moderation_handler(message):
     if not message.reply_to_message:

@@ -12,24 +12,16 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from config.config_holder import config
-from config.state_holder import state
+from config import config, state
+from handlers import admin_router, user_router, beta_router
 
-from handlers.user import router as user_router
-from handlers.admin import router as admin_router
-from handlers.betatesters import router as beta_router
+from utils import DevIdCheckMiddleware, AllowedUsersMiddleware
+from utils import load_bot_state, load_smertniki
+from utils.moderation import ModerationSystem, AntiMatMiddleware, AntiSpamMiddleware
 
-from utils.middlewares import DevIdCheckMiddleware, AllowedUsersMiddleware
-from utils.json_save_and_load import load_bot_state, load_smertniki, save_bot_state
-from utils.moderation.moderation import ModerationSystem
-from utils.moderation.antispam import AntiSpamMiddleware
-from utils.moderation.antimat import AntiMatMiddleware
+from services.coc import login_coc, close_coc, stop_war_monitor
 
-from services.coc.coc_api import login_coc
-from services.coc.monitor import stop_war_monitor
-from services.coc.coc_api import close_coc
-
-from data.toxic_words_list import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
+from data import BAN_LONG, BAN_WORDS, BAN_LIGHT, BAN_TRIGGERS
 
 dp = Dispatcher()
 shutdown_event = asyncio.Event()

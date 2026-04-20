@@ -1,6 +1,6 @@
 from groq import AsyncGroq
-from config.config_holder import config
-from data.system_ai_prompts.antitoxic_moderation import prompt as modPrompt
+from config import config
+from data.system_ai_prompts import moderation_prompt
 import json
 import time
 import io
@@ -150,7 +150,7 @@ async def ai_moderation(message):
             messages=[
                 {
                     "role": "system",
-                    "content": modPrompt,
+                    "content": moderation_prompt,
                 },
                 {
                     "role": "user",

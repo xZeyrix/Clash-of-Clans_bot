@@ -1,3 +1,3 @@
-from config.state import RuntimeState
+from config.state_setup import RuntimeState
 
 state = RuntimeState()

@@ -1,24 +1,16 @@
-from services.ai_system.groqapi_functions import router, asuna, promptguard, ai_moderation, voice_to_text
-from data.system_ai_prompts.main_router import RouterPrompt as router_prompt
-from data.system_ai_prompts.asuna_router import AsunaRouterPrompt as asuna_router_prompt
-from data.system_ai_prompts.asuna_general import longPrompt as general_prompt
-from data.system_ai_prompts.asuna_coc import prompt as coc_prompt
-from data.system_ai_prompts.asuna_member import prompt as member_prompt
-from data.system_ai_prompts.asuna_rules import prompt as rules_prompt
-from data.system_ai_prompts.asuna_smertniki import prompt as smertniki_prompt
-from services.ai_system.asuna_jailbreak_phrases import randomReplica
-from data.toxic_words_list import BAN_WORDS, BAN_LONG, BAN_LIGHT, BAN_TRIGGERS
-from utils.moderation.antimat import regex_fallback_moderation, apply_moderation_result
-from config.state_holder import state
-from config.config_holder import config
-from config.state_holder import state
+from services.ai_system import router, asuna, promptguard, ai_moderation, voice_to_text, randomReplica
+
+from data.system_ai_prompts import coc_prompt, rules_prompt, member_prompt, router_prompt, asuna_router_prompt, smertniki_prompt, general_prompt
+from data import BAN_LIGHT, BAN_LONG, BAN_TRIGGERS, BAN_WORDS, people
+from data import RULES_CW, RULES_CWL, RULES_EVENTS, RULES_INFO, RULES_MAIN, RULES_PENALTIES, RULES_RAIDS, RULES_ROLES, RULES_SHORT
+
+from utils.moderation import regex_fallback_moderation, apply_moderation_result
+from utils import get_clan_info, get_clan_members, get_war_status, get_raids, search_videos
+from commands import smertnikiAdd, smertnikiClear, smertnikiRemove
+
+from config import config, state
 import json
 import html
-from data.members_info import people
-from commands.smertniki import smertnikiAdd, smertnikiRemove, smertnikiClear
-from data.rules_texts import RULES_SHORT, RULES_MAIN, RULES_CW, RULES_CWL, RULES_EVENTS, RULES_RAIDS, RULES_ROLES, RULES_PENALTIES, RULES_INFO
-from utils.cocapi_get_info import get_clan_info, get_clan_members, get_war_status, get_cwl_prep_members, get_cwl_status, get_raids
-from utils.youtube_api import search_videos
 
 async def AICheckMessage(message):
     try:

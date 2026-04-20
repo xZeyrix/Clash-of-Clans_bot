@@ -2,8 +2,7 @@ import httpx
 import asyncio
 import random
 from typing import Literal
-from config.config_holder import config
-from config.state_holder import state
+from config import config, state
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 

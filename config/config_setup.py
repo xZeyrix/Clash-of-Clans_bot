@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from pathlib import Path
 
 load_dotenv()
@@ -29,7 +29,7 @@ class Config:
     youtube_api_key: str
 
     # Paths
-    base_dir: str
+    base_dir: Path
     json_dir: str
     smertniki_file: str
     state_file: str

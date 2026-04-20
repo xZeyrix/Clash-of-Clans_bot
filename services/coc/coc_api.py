@@ -1,9 +1,5 @@
-# --------------------------------
-# 🟢 Clash of Clans API
-# --------------------------------
-
 import coc
-from config.config_holder import config
+from config import config
 from datetime import datetime, timezone, timedelta
 
 coc_client = None

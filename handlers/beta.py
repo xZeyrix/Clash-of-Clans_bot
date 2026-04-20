@@ -1,7 +1,6 @@
 from aiogram import Router, types, F
-from config.config_holder import config
-from config.state_holder import state
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from config import config, state
 import html
 
 router = Router()

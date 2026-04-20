@@ -1,8 +1,6 @@
-from utils.json_save_and_load import save_smertniki
-import config.config as config
+from utils import save_smertniki
 import html
-from config.state_holder import state
-from config.config_holder import config
+from config import config, state
 
 def smertnikiAdd(names):
     nicknames = [name.strip() for name in names.split(',')]

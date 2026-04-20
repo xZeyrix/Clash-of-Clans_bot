@@ -1,9 +1,8 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message
+from handlers.beta import  get_allow_keyboard
 from typing import Callable, Any, Dict, Awaitable
-from config.config_holder import config
-from config.state_holder import state
-from handlers.betatesters import  get_allow_keyboard
+from config import config, state
 
 class AdminCheckMiddleware(BaseMiddleware):
     async def __call__(

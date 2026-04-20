@@ -1,13 +1,15 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
 from typing import Callable, Dict, Any, Awaitable
+from collections import OrderedDict
+
 import asyncio
 import re
-from collections import OrderedDict
-from config.config_holder import config
-from config.state_holder import state
 from html import escape
+
+from config import config, state
 
 MAX_STORED_MESSAGES = 100  # Максимальное количество сохранённых сообщений для просмотра
 

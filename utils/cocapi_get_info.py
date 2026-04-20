@@ -1,7 +1,7 @@
 import httpx
 import asyncio
 from datetime import datetime, timezone
-from config.config_holder import config
+from config import config
 
 API_KEY = config.coc_api_key
 tag = "%239G29PC8U"

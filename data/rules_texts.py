@@ -1,5 +1,5 @@
 import html
-from config.config_holder import config
+from config import config
 
 # --------------------------------
 # Команды и справка

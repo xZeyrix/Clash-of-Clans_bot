@@ -1,10 +1,9 @@
+from aiogram import Bot
+import os
 from datetime import datetime, timezone
 import tempfile
-import os
 import json
-from aiogram import Bot
-from config.config_holder import config
-from config.state_holder import state
+from config import config, state
 
 async def load_bot_state(bot: Bot):
     """Загружает состояние бота из файла"""

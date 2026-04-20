@@ -1,10 +1,9 @@
 import coc
-from services.coc import coc_api
+from services import coc_api
 from datetime import datetime, timezone, timedelta
-from config.config_holder import config
-from config.state_holder import state
+from config import config, state
 from aiogram import Bot
-from utils.json_save_and_load import save_smertniki
+from utils import save_smertniki
 
 war_previous_state = None
 war_last_data = None

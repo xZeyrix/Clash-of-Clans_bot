@@ -1,18 +1,14 @@
-import asyncio
-import logging
 from aiogram import Router, types, F
 from aiogram.filters import Command
 import html
-from utils.middlewares import PauseCheckMiddleware
-from data.rules_texts import help_text, RULES_SHORT
-from config.config_holder import config
-from config.state_holder import state
+
+from utils import PauseCheckMiddleware
+from data import help_text, RULES_SHORT
+from config import config, state
 from commands.rules import RULES_LIST, get_navigation_keyboard
-from services.coc.clan import get_clan_info
-from services.coc.war import get_war_info
-from services.ai_system.groqapi_functions import voice_to_text
-from commands.admin_moderation import admin_moderation_handler
-from services.ai_system.asuna_ai import AICheckMessage
+from services.coc import get_war_info, get_clan_info
+from commands.moderation import admin_moderation_handler
+from services.ai_system import AICheckMessage
 
 router = Router()
 router.message.middleware(PauseCheckMiddleware())

@@ -1,16 +1,16 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
-from services.coc import monitor
-from utils.middlewares import AdminCheckMiddleware
-from utils.json_save_and_load import save_bot_state
-from services.coc.monitor import start_war_monitor, stop_war_monitor
+
+from services import monitor
+from utils import AdminCheckMiddleware, save_bot_state
+from services.coc import start_war_monitor, stop_war_monitor
+
+from config import config, state
+from data import ADMIN_TEXT
+from commands import send_message, smertniki
+
 import html
-from config.config_holder import config
-from config.state_holder import state
-from data.rules_texts import ADMIN_TEXT
-from commands.send import send_message
 import logging
-from commands.smertniki import smertniki
 
 router = Router()
 if not config.dev_mode:

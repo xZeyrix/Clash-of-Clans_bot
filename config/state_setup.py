@@ -1,13 +1,15 @@
-from dataclasses import dataclass, field
+from pydantic.dataclasses import dataclass
+from pydantic import ConfigDict
+from dataclasses import field
 from typing import Any, Optional
-from utils.moderation.moderation import ModerationSystem
+from utils.moderation import ModerationSystem
 
 @dataclass
 class YoutubeState:
     date: Optional[str] = None
     content: Optional[list] = None
 
-@dataclass
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class RuntimeState:
     # /services/ai_system/asuna_ai.py (On/Off)
     ai_enabled: bool = True
