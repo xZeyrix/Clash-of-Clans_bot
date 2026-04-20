@@ -1,7 +1,7 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
 
-from services import monitor
+from services.coc import monitor
 from utils import AdminCheckMiddleware, save_bot_state
 from services.coc import start_war_monitor, stop_war_monitor
 

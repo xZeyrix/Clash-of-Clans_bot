@@ -5,9 +5,9 @@ import html
 from utils import PauseCheckMiddleware
 from data import help_text, RULES_SHORT
 from config import config, state
-from commands.rules import RULES_LIST, get_navigation_keyboard
+from commands import RULES_LIST, get_navigation_keyboard
 from services.coc import get_war_info, get_clan_info
-from commands.moderation import admin_moderation_handler
+from commands import admin_moderation_handler
 from services.ai_system import AICheckMessage
 
 router = Router()

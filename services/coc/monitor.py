@@ -1,7 +1,8 @@
-from services.coc import check_war_status, check_cwl_status
+from services.coc.cw_monitor import check_war_status
+from services.coc.cwl_monitor import check_war_status as check_cwl_status
 import asyncio
 from aiogram import Bot
-from services import coc_api
+from services.coc import coc_api
 from config import config
 
 war_monitor_active = False

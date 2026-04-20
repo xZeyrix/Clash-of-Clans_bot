@@ -1,5 +1,31 @@
-from .moderation import ModerationSystem
-from .antimat import AntiMatMiddleware, regex_fallback_moderation, apply_moderation_result
-from .antispam import AntiSpamMiddleware
+__all__ = [
+	"ModerationSystem",
+	"AntiMatMiddleware",
+	"AntiSpamMiddleware",
+	"regex_fallback_moderation",
+	"apply_moderation_result",
+]
 
-__all__ = ["ModerationSystem", "AntiMatMiddleware", "AntiSpamMiddleware"]
+_EXPORTS = {
+	"ModerationSystem": (".moderation", "ModerationSystem"),
+	"AntiMatMiddleware": (".antimat", "AntiMatMiddleware"),
+	"regex_fallback_moderation": (".antimat", "regex_fallback_moderation"),
+	"apply_moderation_result": (".antimat", "apply_moderation_result"),
+	"AntiSpamMiddleware": (".antispam", "AntiSpamMiddleware"),
+}
+
+
+def __getattr__(name: str):
+	target = _EXPORTS.get(name)
+	if target is None:
+		raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+	module_path, attr_name = target
+	module = __import__(f"{__name__}{module_path}", fromlist=[attr_name])
+	value = getattr(module, attr_name)
+	globals()[name] = value
+	return value
+
+
+def __dir__():
+	return sorted(set(globals()) | set(__all__))

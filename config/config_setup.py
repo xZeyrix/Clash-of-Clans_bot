@@ -34,11 +34,13 @@ class Config:
     smertniki_file: str
     state_file: str
     smertniki_log: str
+    main_log: str
 
 def load_config() -> Config:
     dev_mode = os.getenv("DEV_MODE", "true").lower() == "true"
 
     base_dir = Path.cwd()
+    log_dir = os.path.join(base_dir, "data/log")
     json_dir = os.path.join(base_dir, "data/json_files")
 
     return Config(
@@ -63,5 +65,6 @@ def load_config() -> Config:
         json_dir=json_dir,
         smertniki_file=os.path.join(json_dir, "smertniki.json"),
         state_file=os.path.join(json_dir, "bot_state.json"),
-        smertniki_log=os.path.join(json_dir, "smertniki.log")
+        smertniki_log=os.path.join(log_dir, "smertniki.log"),
+        main_log=os.path.join(log_dir, "main.log")
     )

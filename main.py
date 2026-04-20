@@ -16,7 +16,7 @@ from config import config, state
 from handlers import admin_router, user_router, beta_router
 
 from utils import DevIdCheckMiddleware, AllowedUsersMiddleware
-from utils import load_bot_state, load_smertniki
+from utils import load_bot_state, load_smertniki, logger
 from utils.moderation import ModerationSystem, AntiMatMiddleware, AntiSpamMiddleware
 
 from services.coc import login_coc, close_coc, stop_war_monitor
@@ -77,14 +77,13 @@ async def shutdown(dp, bot):
     # Stop COC war monitor
     stop_war_monitor()
     
-    # Отправляем уведомление
     try:
         await asyncio.wait_for(
             bot.send_message(config.chat_id, "❗ Бот уходит на техобслуживание."),
             timeout=5.0
         )
     except (asyncio.TimeoutError, Exception) as e:
-        logging.error(f"An error occured while sending a message that the bot was stopped: {e}")
+        logger.error(f"An error occured while sending a message that the bot was stopped: {e}")
     
     # COC client close
     await close_coc()
@@ -94,16 +93,17 @@ async def shutdown(dp, bot):
     if dp.storage:
         await dp.storage.close()
     
-    logging.info("The bot was succefully stopped.")
+    logger.info("The bot was succefully stopped.")
 
 
 def setup_signal_handlers(loop, dp):
     def signal_handler(sig, frame):
-        logging.info(f"\nThe signal received: {sig}, trying to stop the bot...")
+        logger.info(f"The signal received: {sig}, trying to stop the bot...")
         loop.call_soon_threadsafe(lambda: asyncio.create_task(dp.stop_polling()))
-    
+
     signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    if hasattr(signal, "SIGTERM"):
+        signal.signal(signal.SIGTERM, signal_handler)
 
 if __name__ == "__main__":
     max_restarts = 3
@@ -114,11 +114,11 @@ if __name__ == "__main__":
             asyncio.run(main())
             break
         except KeyboardInterrupt:
-            logging.info("Exit is in progress because Ctrl+C.")
+            logger.info("Exit is in progress because Ctrl+C.")
             break
         except Exception:
             restart_count += 1
-            logging.exception(f"The bot crashed (retry {restart_count}/{max_restarts})")
+            logger.exception(f"The bot crashed (retry {restart_count}/{max_restarts})")
             if restart_count < max_restarts:
-                logging.info("Reboot in 15 seconds...")
+                logger.info("Reboot in 15 seconds...")
                 time.sleep(15)

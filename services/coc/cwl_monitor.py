@@ -1,5 +1,5 @@
 import coc
-from services import coc_api
+from services.coc import coc_api
 from datetime import datetime, timezone, timedelta
 from config import config, state
 from aiogram import Bot

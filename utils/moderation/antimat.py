@@ -67,7 +67,6 @@ def regex_fallback_moderation(
     words_light: list[str],
     words_triggers: list[str],
 ) -> dict:
-    """Локальная (без LLM) проверка на нарушение. Формат совместим с ai_moderation."""
     text = (text or "").lower()
     if not text:
         return {"violation": 0, "class": "safe", "reason": ""}
@@ -99,7 +98,6 @@ def regex_fallback_moderation(
 
 
 async def apply_moderation_result(event: Message, moderation_system, result: dict) -> bool:
-    """Применяет результат модерации к сообщению. Возвращает True, если действие выполнено."""
     if not result or result.get("violation") != 1:
         return False
 

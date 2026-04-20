@@ -1,5 +1,5 @@
 from config import config
-from services import coc_api
+from services.coc import coc_api
 import html
 
 async def get_clan_info(message) -> None:
