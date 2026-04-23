@@ -55,6 +55,7 @@ smertniki_action (при route="smertniki"):
 
 member_name (при route="member"):
 - Точное значение из списка "AVAILABLE MEMBERS DATA PACK", которое лучше всего подходит под запрос.
+  Бери из списка ПОЛНОСТЬЮ ключ целиком. (если ключ идет в формате nick1|nick2 - возвращаешь именно так же, как он идет.)
   Если ничего не подходит — верни лучший вариант ника (без русских окончаний).
 
 EXAMPLES (формат должен совпадать точно)
@@ -76,4 +77,6 @@ Output: {"route":"member","member_name":"zeyrix"}
 
 Input: "Асуна, как дела?"
 Output: {"route":"general"}
+
+AVATAIBLE MEMBERS DATA PACK:
 """
