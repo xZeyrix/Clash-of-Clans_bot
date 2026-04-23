@@ -4,6 +4,7 @@ import asyncio
 from aiogram import Bot
 from services.coc import coc_api
 from config import config
+from services.coc.tag_utils import normalize_clan_tag
 
 war_monitor_active = False
 war_monitor_task = None 
@@ -21,12 +22,18 @@ async def war_monitor_loop(bot: Bot):
     
     while war_monitor_active:
         try:
+            clan_tag = normalize_clan_tag(config.clan_tag)
+            if clan_tag is None:
+                print("⚠️ Мониторинг войны: CLAN_TAG не задан, проверка пропущена")
+                await asyncio.sleep(60)
+                continue
+
             try:
-                cwl = await coc_api.coc_client.get_league_group(config.clan_tag)
+                cwl = await coc_api.coc_client.get_league_group(clan_tag)
                 cw = None
             except Exception as e:
                 cwl = None
-                cw = await coc_api.coc_client.get_current_war(config.clan_tag)
+                cw = await coc_api.coc_client.get_current_war(clan_tag)
             if cwl is not None:
                 await check_cwl_status(bot)
             elif cw is not None:

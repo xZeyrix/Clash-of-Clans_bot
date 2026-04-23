@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from config import config, state
 from aiogram import Bot
 from utils import save_smertniki
+from services.coc.tag_utils import normalize_clan_tag
 
 war_previous_state = None
 war_last_data = None
@@ -37,7 +38,12 @@ async def check_war_status(bot: Bot):
     global war_previous_state, war_last_data
 
     try:
-        war = await coc_api.coc_client.get_current_war(config.clan_tag)
+        clan_tag = normalize_clan_tag(config.clan_tag)
+        if clan_tag is None:
+            print("⚠️ Проверка CW: CLAN_TAG не задан")
+            return
+
+        war = await coc_api.coc_client.get_current_war(clan_tag)
 
         if war.state == 'notInWar':
             if war_previous_state == 'InWar':

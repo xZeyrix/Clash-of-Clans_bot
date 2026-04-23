@@ -88,5 +88,4 @@ async def search_videos(query: Literal['layout', 'strategy'], max_results=50):
                 state.youtube_strategies.content = videos
 
             cycle = min(3, len(videos))
-            print(len(videos))
             return random.sample(videos, cycle) if cycle > 0 else []

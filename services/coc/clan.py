@@ -1,5 +1,6 @@
 from config import config
 from services.coc import coc_api
+from services.coc.tag_utils import normalize_clan_tag
 import html
 
 async def get_clan_info(message) -> None:
@@ -9,11 +10,12 @@ async def get_clan_info(message) -> None:
 
         # Парсим сообщение, чтобы получить тег клана
         parts = message.text.split()
-        clan_tag = parts[1] if len(parts) > 1 else config.clan_tag
+        requested_tag = parts[1] if len(parts) > 1 else None
+        clan_tag = normalize_clan_tag(requested_tag, config.clan_tag)
 
-        # Если тег не начинается с '#', добавляем его
-        if not clan_tag.startswith('#'):
-            clan_tag = '#' + clan_tag
+        if clan_tag is None:
+            await msg.edit_text("⚠️ Не задан тег клана. Укажи тег в команде или настрой CLAN_TAG в .env")
+            return None
         
         # Получаем информацию о клане
         try:

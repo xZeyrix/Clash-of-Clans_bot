@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from config import config, state
 from aiogram import Bot
 from utils import save_smertniki
+from services.coc.tag_utils import normalize_clan_tag
 
 # Состояния для отслеживания CWL
 cwl_previous_state = None
@@ -40,8 +41,13 @@ async def check_war_status(bot: Bot):
     global cwl_previous_state, cwl_league_season, cwl_preparation_notified, cwl_ended_notified
 
     try:
+        clan_tag = normalize_clan_tag(config.clan_tag)
+        if clan_tag is None:
+            print("⚠️ Проверка CWL: CLAN_TAG не задан")
+            return
+
         # Получаем информацию о лиге войн
-        league_group = await coc_api.coc_client.get_league_group(config.clan_tag)
+        league_group = await coc_api.coc_client.get_league_group(clan_tag)
         
         # Проверяем состояние лиги
         current_state = league_group.state
@@ -74,7 +80,7 @@ async def check_war_status(bot: Bot):
         # Состояние "inWar" - идут войны
         elif current_state == 'inWar':
             # Получаем текущую войну
-            current_war = await coc_api.coc_client.get_current_war(config.clan_tag, cwl_league=True)
+            current_war = await coc_api.coc_client.get_current_war(clan_tag, cwl_league=True)
             
             # Проверяем, что это действительно война CWL
             if not current_war or current_war.is_cwl is False:
@@ -83,7 +89,7 @@ async def check_war_status(bot: Bot):
             war_tag = current_war.tag if hasattr(current_war, 'tag') else str(current_war.preparation_start_time.time.timestamp())
             
             # Определяем день войны (1-7)
-            war_day = await get_war_day_number(league_group.get_wars_for_clan(config.clan_tag))
+            war_day = await get_war_day_number(league_group.get_wars_for_clan(clan_tag))
 
             if war_day is None:
                 war_day = "?"
@@ -247,7 +253,7 @@ async def check_war_status(bot: Bot):
                     # Находим наш клан в группе
                     our_clan = None
                     for clan in league_group.clans:
-                        if clan.tag == config.clan_tag:
+                        if clan.tag == clan_tag:
                             our_clan = clan
                             break
                     
