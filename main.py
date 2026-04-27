@@ -34,7 +34,7 @@ dp.callback_query.middleware(DevIdCheckMiddleware()) if config.dev_mode else dp.
 moderation = ModerationSystem(ban_time=86400)
 state.moderation = moderation
 
-antispam = AntiSpamMiddleware(moderation, rate_limit=10, time_window=60)
+antispam = AntiSpamMiddleware(moderation, rate_limit=12, time_window=60)
 antimat = AntiMatMiddleware(moderation, bad_words=BAN_WORDS, long_bad_words=BAN_LONG, words_light=BAN_LIGHT, words_triggers=BAN_TRIGGERS)
 
 dp.message.middleware(antispam)

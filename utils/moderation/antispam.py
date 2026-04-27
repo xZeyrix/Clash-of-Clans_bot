@@ -56,6 +56,7 @@ class AntiSpamMiddleware(BaseMiddleware):
                     await event.delete()  # Удаляем сообщение забаненного
                 except:
                     pass
+      
                 message = await event.answer(
                     f"🚫 Вы заблокированы!\n"
                     f"📋 Причина: {reason}\n"
