@@ -178,7 +178,7 @@ class AntiMatMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any]
     ) -> Any:
-        if event.chat.id != config.talk_chat_id or not state.ai_enabled:
+        if event.chat.id != config.talk_chat_id or not state.moderation_enabled:
             return await handler(event, data)
 
         user_id = event.from_user.id
