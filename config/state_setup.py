@@ -11,8 +11,7 @@ class YoutubeState:
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class RuntimeState:
-    # /services/ai_system/asuna_ai.py (On/Off)
-    ai_enabled: bool = True
+    moderation_enabled: bool = True
 
     # 2 lists for dev mode beta test
     beta_testers_ids: list[int] = field(default_factory=list)

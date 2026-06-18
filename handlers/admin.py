@@ -82,10 +82,10 @@ async def moderation_toggle_handler(message: types.Message) -> None:
         return
     
     if parts[1].lower() == "on":
-        state.ai_enabled = True
+        state.moderation_enabled = True
         await message.answer("✅ Модерация включена")
     elif parts[1].lower() == "off":
-        state.ai_enabled = False
+        state.moderation_enabled = False
         await message.answer("❎ Модерация отключена")
 
 # -----------------------------------------------
