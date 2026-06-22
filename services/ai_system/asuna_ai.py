@@ -12,6 +12,7 @@ from config import config, state
 import json
 import html
 import re
+from utils.logging import logger
 
 def is_target_really_asuna(text: str, llm_target: str) -> str:
     # Если нейросеть и так сказала, что это чат, верим ей
@@ -88,6 +89,7 @@ async def AICheckMessage(message):
             if ai_result["class"] == "safe":
                 return True
             else:
+                logger.warning("BAN/WARNING", extra={"type": "moderation", "data": {"user": message.from_user.full_name, "text": text}})
                 try:
                     if message.voice:
                         await decryptedMessage.delete()
