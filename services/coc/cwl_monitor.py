@@ -194,7 +194,7 @@ async def check_war_status(bot: Bot):
                 print(f"✅ Отправлено уведомление: День {war_day}, последний час")
             
             # Осталось <= 60 секунд - финальное сообщение об окончании дня
-            if time_remaining <= 60 and not notifications['war_ended']:
+            if 0 <= time_remaining <= 60 and not notifications['war_ended']:
                 # Определяем результат дня
                 if current_war.clan.stars > current_war.opponent.stars:
                     result = "🎉 <b>ПОБЕДА!</b> 🏆"

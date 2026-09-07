@@ -69,7 +69,7 @@ async def AICheckMessage(message):
             except:
                 history = list()
         else:
-            startRouter = await router(text, router_prompt, "llama-3.1-8b-instant", history)
+            startRouter = await router(text, router_prompt, "openai/gpt-oss-120b", history)
             if not startRouter:
                 return False
             action = startRouter.get("action")
@@ -105,7 +105,6 @@ async def AICheckMessage(message):
 
             response = await message.answer("💫 <b>Асуна</b>:\n\nПечатаю...")
             gptoss120b = "openai/gpt-oss-120b"
-            llama70b = "llama-3.3-70b-versatile"
             
             try:
                 asunaClassifyPrompt = asuna_router_prompt + str(people.keys())
@@ -130,7 +129,7 @@ async def AICheckMessage(message):
                         )
                         prompt = coc_prompt + f"Ссылок нет. НО ты должна ответить пользователю, что ты нашла для него видео и стратегии, скажи что вот ссылки, НО НИКАКИЕ ССЫЛКИ ЕМУ НЕ ОТПРАВЛЯЙ. Просто на русском языке перескажи ВКРАТЦЕ содержимое |data|{titles}|data|, например, если там 3 огромных описания, несколькими русскими словами возьми все это в совокупности и не нарушая нормы/грамматику ответь пользователю вкратце по порядку, каждое ПРОНУМЕРУЙ (1-3). НЕ ПРЕДЛАГАЙ пользователю следующий шаг, т.е. никогда не говори по типу 'могу рассказать побольше о них если хочешь'. Конец твоего сообщения ДОЛЖЕН заканчиваться на знак ':', например 'вот ссылки:'. Подсказки по переводу с английского на русский: th -> тх, thrower -> метатель, dragon duke -> драгон дюк, root riders -> корни, grand warden -> дед, archer queen -> королева, barb king -> король, fireball -> огенный шар, revive -> возрождение, troop launcher -> войскомет, log launcher -> бревномет, siege barracks -> казармы, battle blimp -> дирик, flame flinger -> огнеметатель. ВАЖНО: Ты можешь возвращать только 3 рандомных ресурса по выбранной теме (только strategies, layouts), если пользователь просит что-то конкретное: для тх17, тх18, какие-то определенные стратегии/базы - ты ДОЛЖНА ответить, что не можешь этого сделать (перед 3 пунктами вкратце скажи пользователю что не можешь найти конкретно то, чего он хочет - например какая-то определенная стратегия по типу rc charge), и сказать, что ты нашла на самом деле (содержимое |data|)."
 
-                        output = await asuna(text, prompt, llama70b, history)
+                        output = await asuna(text, prompt, gptoss120b, history)
                         await response.edit_text("💫 <b>Асуна</b>:\n\n" + output + f"\n{youtubeLinks}\n\n P.S. если захочешь что-то из этого использовать - у каждого ролика в описании есть ссылка на микс/базу")
                     else:
                         cocCommands = {
@@ -144,7 +143,7 @@ async def AICheckMessage(message):
                         result = await cocCommands[param]()
                         prompt = coc_prompt + str(result)
 
-                        output = await asuna(text, prompt, llama70b, history)
+                        output = await asuna(text, prompt, gptoss120b, history)
                         await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
                 elif route == "rules":
                     param = asunaClassify.get("rules_part")
@@ -162,13 +161,13 @@ async def AICheckMessage(message):
                     rule = rules[param]
                     prompt = rules_prompt + rule
 
-                    output = await asuna(text, prompt, llama70b, history)
+                    output = await asuna(text, prompt, gptoss120b, history)
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
                 elif route == "smertniki":
                     param = asunaClassify.get("smertniki_action")
                     prompt = smertniki_prompt + (str(state.smertniki) if state.smertniki else "Список смертников пуст")
 
-                    output = await asuna(text, prompt, llama70b, history)
+                    output = await asuna(text, prompt, gptoss120b, history)
                     output = json.loads(output)
                     users = output["users"]
                     secondParam = output["action"]
@@ -192,7 +191,7 @@ async def AICheckMessage(message):
                     except:
                         prompt = member_prompt + "Данные отсутствуют."
 
-                    output = await asuna(text, prompt, llama70b, history)
+                    output = await asuna(text, prompt, gptoss120b, history)
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + output)
                 else:
                     await response.edit_text("💫 <b>Асуна</b>:\n\n" + "Упс! Кажется, произошла ошибка, и я не могу ответить. Попробуйте позвать меня еще раз")

@@ -37,9 +37,9 @@ state.moderation = moderation
 antispam = AntiSpamMiddleware(moderation, rate_limit=12, time_window=60)
 antimat = AntiMatMiddleware(moderation, bad_words=BAN_WORDS, long_bad_words=BAN_LONG, words_light=BAN_LIGHT, words_triggers=BAN_TRIGGERS)
 
-dp.message.middleware(antispam)
-dp.message.middleware(antimat)
-dp.edited_message.middleware(antimat)
+# dp.message.middleware(antispam)
+# dp.message.middleware(antimat)
+# dp.edited_message.middleware(antimat)
 
 async def main() -> None:
     logging.basicConfig(
