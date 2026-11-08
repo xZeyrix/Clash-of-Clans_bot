@@ -5,6 +5,12 @@ from pathlib import Path
 
 load_dotenv()
 
+base_dir = Path.cwd()
+log_dir = os.path.join(base_dir, "data/log")
+json_dir = os.path.join(base_dir, "data/json_files")
+
+Path(log_dir).mkdir(parents=True, exist_ok=True)
+
 @dataclass(frozen=True)
 class Config:
     # Dev mode (turn off at deploy)
@@ -38,10 +44,6 @@ class Config:
 
 def load_config() -> Config:
     dev_mode = os.getenv("DEV_MODE", "true").lower() == "true"
-
-    base_dir = Path.cwd()
-    log_dir = os.path.join(base_dir, "data/log")
-    json_dir = os.path.join(base_dir, "data/json_files")
 
     return Config(
         dev_mode=dev_mode,
