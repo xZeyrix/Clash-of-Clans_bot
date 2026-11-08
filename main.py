@@ -7,6 +7,7 @@ import logging
 import sys
 import signal
 import time
+import urllib.request
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -40,6 +41,13 @@ antimat = AntiMatMiddleware(moderation, bad_words=BAN_WORDS, long_bad_words=BAN_
 # dp.message.middleware(antispam)
 # dp.message.middleware(antimat)
 # dp.edited_message.middleware(antimat)
+
+ip = urllib.request.urlopen(
+    "https://api.ipify.org",
+    timeout=10
+).read().decode()
+
+print(f"Server outbound IP: {ip}")
 
 async def main() -> None:
     logging.basicConfig(
